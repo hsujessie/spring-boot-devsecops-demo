@@ -12,11 +12,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Checkout 原始碼 (鎖定 Commit SHA 避免供應鏈攻擊)
       - name: 1. Checkout Code
         uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98 # v3.6.0
         with:
           fetch-depth: 0
 
+      # 2. 設定 JDK 26 環境
       - name: 2. Set up JDK 26
         uses: actions/setup-java@0ab4596768b603586c0de567f2430c30f5b0d2b0 # v3.13.0
         with:
@@ -24,29 +26,51 @@ jobs:
           distribution: "temurin"
           cache: maven
 
-      - name: 3. Build with Maven
-        run: ./mvnw clean package -DskipTests
-
-      - name: 4. SAST Scan (Semgrep)
+      # 3. SAST 原始碼邏輯掃描 (Semgrep)
+      - name: 3. SAST Scan (Semgrep)
         run: |
           docker run --rm -v $(pwd):/src returntocorp/semgrep semgrep --config=auto /src
 
-      - name: 5. SCA Dependency Scan (Trivy)
+      # 4. SCA 快速掃描 (Trivy for pom.xml — 提供開發端 Fast Feedback)
+      - name: 4. Fast SCA Scan (pom.xml)
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
         with:
           scan-type: "fs"
-          scan-ref: "."
+          scan-ref: "pom.xml"
+          severity: "HIGH,CRITICAL"
+          exit-code: "0"
+
+      # 5. Maven 自動化打包 (編譯出 target/*.jar)
+      - name: 5. Build Package with Maven
+        run: ./mvnw clean package -DskipTests
+
+      # 6. SCA 深度二進位檔掃描 (符合甲方與稽核標準 — 針對 BOOT-INF/lib 解包掃描)
+      - name: 6. Deep SCA Scan (BOOT-INF/lib Binary Audit)
+        run: |
+          # 建立臨時解壓目錄
+          mkdir -p target/extracted-app
+
+          # 解壓 target 目錄下的 jar 檔案以提取內部所有 .jar 依賴項
+          if ls target/*.jar 1> /dev/null 2>&1; then
+            unzip -q target/*.jar -d target/extracted-app
+          fi
+
+      - name: 6b. Run Trivy on Extracted BOOT-INF/lib
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+        with:
+          scan-type: "fs"
+          scan-ref: "./target/extracted-app/BOOT-INF/lib" # 👈 精準指名掃描實體 .jar 庫
           severity: "HIGH,CRITICAL"
           exit-code: "0"
 
       # ───【 第二階段新新增：容器安全 】───
-      # 6. 打包 Docker Image
-      - name: 6. Build Docker Image
+      # 7. 打包 Docker Image
+      - name: 7. Build Docker Image
         run: |
           docker build -t spring-boot-demo-app:${{ github.sha }} .
 
-      # 7. 容器鏡像掃描 (Trivy for Docker Image)
-      - name: 7. Container Image Scan (Trivy)
+      # 8. 容器鏡像掃描 (Trivy for Container OS & Base Image)
+      - name: 8. Container Image Scan (Trivy)
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
         with:
           scan-type: "image"
