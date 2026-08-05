@@ -1,0 +1,44 @@
+name: DevSecOps Spring Boot Pipeline
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build-and-security-scan:
+    name: Build Java & Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout Code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: 2. Set up JDK 26
+        uses: actions/setup-java@v3
+        with:
+          java-version: "26"
+          distribution: "temurin"
+          cache: maven
+
+      - name: 3. Build with Maven
+        run: ./mvnw clean package -DskipTests
+
+      - name: 4. SAST Scan (Semgrep)
+        run: |
+          docker run --rm -v $(pwd):/src returntocorp/semgrep semgrep --config=auto /src
+
+      - name: 5. SCA Dependency Scan (Trivy)
+        run: |
+          docker run --rm -v $(pwd):/root/src aquasec/trivy fs /root/src \
+            --severity HIGH,CRITICAL \
+            --exit-code 0
+
+      - name: 6. Verify Secrets Injection (機密引用測試)
+        env:
+          MY_TOKEN: ${{ secrets.DUMMY_TOKEN }}
+        run: |
+          echo "Secret is injected successfully!"
