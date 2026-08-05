@@ -32,10 +32,12 @@ jobs:
           docker run --rm -v $(pwd):/src returntocorp/semgrep semgrep --config=auto /src
 
       - name: 5. SCA Dependency Scan (Trivy)
-        run: |
-          docker run --rm -v $(pwd):/root/src aquasec/trivy fs /root/src \
-            --severity HIGH,CRITICAL \
-            --exit-code 0
+        uses: aquasecurity/trivy-action@v0.28.0
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          severity: "HIGH,CRITICAL"
+          exit-code: "0"
 
       - name: 6. Verify Secrets Injection (機密引用測試)
         env:
