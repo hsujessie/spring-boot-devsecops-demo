@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-boot-demo
+  labels:
+    app: spring-boot-demo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: spring-boot-demo
+  template:
+    metadata:
+      labels:
+        app: spring-boot-demo
+    spec:
+      securityContext:
+        # 在 Pod 層級強制以非 root 用戶運行，並限制 UID/GID
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: spring-boot-demo
+          image: spring-boot-demo-app:latest # 實際佈署時可替換為對應的 Tag 或 commit sha
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          securityContext:
+            # 容器層級的安全設定
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true # 設定為唯讀唯讀檔案系統
+            capabilities:
+              drop:
+                - ALL # 丟棄所有非必要的 Linux Capability
+          resources:
+            limits:
+              cpu: "1"
+              memory: 512Mi
+            requests:
+              cpu: 500m
+              memory: 256Mi
+          volumeMounts:
+            # 因為 readOnlyRootFilesystem 設為 true，需要掛載一個臨時寫入目錄給 Spring Boot 使用（如 Tomcat 的 tmp 目錄）
+            - name: tmp-volume
+              mountPath: /tmp
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 5
+      volumes:
+        - name: tmp-volume
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spring-boot-demo-service
+spec:
+  selector:
+    app: spring-boot-demo
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: ClusterIP
