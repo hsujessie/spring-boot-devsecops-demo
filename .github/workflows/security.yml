@@ -47,18 +47,14 @@ jobs:
       # 6. SCA 深度二進位檔掃描 (符合甲方與稽核標準 — 針對 BOOT-INF/lib 解包掃描)
       - name: 6. Deep SCA Scan (BOOT-INF/lib Binary Audit)
         run: |
-          # 建立臨時解壓目錄
+          # 解開 Spring Boot JAR 檔
           mkdir -p target/extracted-app
-
-          # 解壓 target 目錄下的 jar 檔案以提取內部所有 .jar 依賴項
-          if ls target/*.jar 1> /dev/null 2>&1; then
-            unzip -q target/*.jar -d target/extracted-app
-          fi
+          unzip -q target/*.jar -d target/extracted-app
 
       - name: 6b. Run Trivy on Extracted BOOT-INF/lib
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
         with:
-          scan-type: "fs"
+          scan-type: "rootfs"
           scan-ref: "./target/extracted-app/BOOT-INF/lib" # 👈 精準指名掃描實體 .jar 庫
           severity: "HIGH,CRITICAL"
           exit-code: "0"
