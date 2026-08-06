@@ -93,6 +93,6 @@ spec:
     app: spring-boot-demo # 透過 Label Selector 將請求自動負載平衡分發至對應的 Pod
   ports:
     - protocol: TCP
-      port: 80 # Cluster 內部可存取的服務連接埠 (Service Port)
+      port: 8080 # 外部可存取的服務連接埠 (Service Port) - 對應 Docker Desktop localhost:8080
       targetPort: 8080 # 映射至後端容器實際監聽的連接埠 (Container Port)
-  type: ClusterIP # 預設類型，僅供 Cluster 內部 Pod/Service 相互溝通使用
+  type: LoadBalancer # 改為 LoadBalancer 以利在 Docker Desktop 中直接對外暴露服務
