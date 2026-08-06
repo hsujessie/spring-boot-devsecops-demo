@@ -27,7 +27,7 @@
     *   **最小化運行環境**：採用 JRE Alpine 輕量基底，並建立非 root 用戶（`appuser`）執行 Java，降低被入侵後的危害防禦面。
 *   **[deployment.yaml](deployment.yaml)**：**Kubernetes 部署與服務設定（資安鎖定）**
     *   **Pod/Container SecurityContext**：啟用 `runAsNonRoot: true`、`readOnlyRootFilesystem: true`（唯讀系統）並丟棄所有 Linux 特權（`drop: ALL`），嚴格遵守最小權限原則。
-    *   **K8s Service**：定義 `ClusterIP` 將容器的 `8080` 對應到內部服務的 `80` 連接埠，進行流量調度。
+    *   **K8s Service**：定義 `LoadBalancer` 服務，將容器內部的 `8080` 對應到外部的 `8080` 連接埠，方便本地直接透過 `localhost:8080` 進行存取。
 
 ---
 
@@ -39,5 +39,7 @@
 
 ### 4. 📝 輔助與版本控制檔案
 *   **[README.md](README.md)**：專案說明文件，詳細列出 CI/CD 資安防禦架構與 Fast / Deep SCA 的比較表。
+*   **[local_k8s_setup.md](local_k8s_setup.md)**：本地 Docker Desktop Kubernetes 部署與驗證指南。
+*   **[DOCKER_K8S_GUIDE.md](DOCKER_K8S_GUIDE.md)**：Docker 與 Kubernetes 架構整合說明指南（包含兩者關係與完整自動化流程）。
 *   **`.gitignore`**：排除不需納入 Git 版本控管的暫存檔案（如 `target/` 目錄、`.idea`、`.vscode` 等編輯器設定檔）。
 *   **`.gitattributes`**：定義跨平台開發時，Git 如何處理換行字元（LF / CRLF），預防腳本在不同作業系統執行時損毀。
