@@ -19,7 +19,9 @@
     *   **SAST 掃描**：使用 Semgrep 靜態分析 Java 原始碼中的安全漏洞與 Hardcoded Secrets。
     *   **Fast SCA 掃描**：使用 Trivy 掃描 `pom.xml`，第一時間阻擋有 CVE 漏洞的套件宣告。
     *   **Deep SCA 二進位審計**：將編譯產出的 JAR 包解開，透過 Trivy 以 `rootfs` 模式深層掃描實體套件 `BOOT-INF/lib/*.jar`。
-    *   **Container 掃描**：打包 Docker 映像檔，並以 Trivy 掃描 Container OS 的基礎漏洞。
+    *   **Container 掃描**：以 Trivy 掃描 Container OS 的基礎漏洞。
+    *   **Docker Hub 推送**：安全檢測全數通過後，自動登入 Docker Hub 並推送含有 Commit SHA 與 latest 雙標籤的 Docker 映像檔。
+    *   **GitOps K8s 自動更新**：在映像檔推送成功後，自動將最新的映像檔 Tag 更新至 `deployment.yaml` 並推回儲存庫。
 *   **[Dockerfile](Dockerfile)**：**容器化配置（安全性加固）**
     *   **多階段構建 (Multi-stage Build)**：分開編譯環境與運行環境，縮減映像檔體積。
     *   **最小化運行環境**：採用 JRE Alpine 輕量基底，並建立非 root 用戶（`appuser`）執行 Java，降低被入侵後的危害防禦面。

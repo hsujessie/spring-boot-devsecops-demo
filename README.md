@@ -31,6 +31,8 @@ spring-boot-demo/
 | :- | :- | :- |
 | 資安定位 | 開發階段防線 (Shift Left) | 最終交付物檢測 (Deliverable / Binary Audit) |
 | 掃描機制 | 文字解析：讀取 XML 結構裡宣告的 `<groupId>` 與 `<artifactId>` | 指紋比對 (Hash Matching)：計算每一個 .jar 的 SHA-1/MD5 雜湊值，比對全球 CVE 資料庫 |
-* **Container Security (容器安全)**：
+* **Container Security (容器安全 & 自動部署)**：
   * **Dockerfile**：採用最小化輕量基底鏡像（Alpine）、多階段構建（Multi-stage Build），並建立 `appuser` 非 root 帳號執行。
+  * **Docker Hub 自動推送**：當所有安全檢測（SAST/SCA/Container Scan）皆通過後，自動將最新映像檔推送至 Docker Hub 倉庫。
+  * **K8s 自動更新 (GitOps)**：在映像檔推送完成後，自動將最新的 Commit SHA 作為 Tag 更新至 `deployment.yaml` 並推回儲存庫。
   * **deployment.yaml**：套用 Kubernetes `SecurityContext`（`runAsNonRoot: true`、`readOnlyRootFilesystem: true`、`allowPrivilegeEscalation: false`），實踐縱深防禦。
