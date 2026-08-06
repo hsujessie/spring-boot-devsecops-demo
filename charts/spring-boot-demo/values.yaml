@@ -5,7 +5,7 @@
 replicaCount: 2
 
 image:
-  repository: spring-boot-demo-app
+  repository: j9686/spring-boot-demo-app
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"

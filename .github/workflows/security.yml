@@ -8,6 +8,7 @@ on:
       - "ARCHITECTURE.md"
       - "DOCKER_K8S_GUIDE.md"
       - "local_k8s_setup.md"
+      - "charts/spring-boot-demo/values.yaml"
   pull_request:
     branches: ["main"]
     paths-ignore:
@@ -15,11 +16,12 @@ on:
       - "ARCHITECTURE.md"
       - "DOCKER_K8S_GUIDE.md"
       - "local_k8s_setup.md"
+      - "charts/spring-boot-demo/values.yaml"
 
 jobs:
   build-and-security-scan:
     name: Build Java & Security Scan
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: write
 
@@ -101,11 +103,16 @@ jobs:
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/spring-boot-demo-app:${{ github.sha }}
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/spring-boot-demo-app:latest
 
-      # 11. 使用 Helm 部署至本地 Kubernetes 叢集 (僅在推送到 main 分支時執行)
-      - name: 11. Deploy with Helm to Local Kubernetes
+      # 11. 自動更新 Helm values.yaml 映像檔 Tag 並寫回 (僅在推送到 main 分支時執行 — GitOps)
+      - name: 11. Update values.yaml & Git Push
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          # 執行 Helm 升級與部署，動態帶入 Docker Hub 帳號與最新 Commit SHA 作為 Image Tag
-          helm upgrade --install spring-boot-demo ./charts/spring-boot-demo \
-            --set image.repository=${{ secrets.DOCKERHUB_USERNAME }}/spring-boot-demo-app \
-            --set image.tag=${{ github.sha }}
+          # 使用 sed 動態替換 values.yaml 中的 image.tag 欄位
+          sed -i 's|tag:.*|tag: "${{ github.sha }}"|g' charts/spring-boot-demo/values.yaml
+
+          # 設定 Git 資訊並提交推回
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add charts/spring-boot-demo/values.yaml
+          git commit -m "chore(deploy): update deployment image tag to ${{ github.sha }} [skip ci]"
+          git push
