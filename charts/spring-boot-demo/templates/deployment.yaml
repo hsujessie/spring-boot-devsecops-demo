@@ -17,7 +17,7 @@ spec:
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}
+        app: {{ .Release.Name }} # 👈 這是 Pod 的身分證
     spec:
       # Pod 層級的安全設定（適用於 Pod 內的所有容器）
       securityContext:
