@@ -57,11 +57,17 @@ spec:
           command: ["/bin/sh", "-c"]
           args:
             - "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ServerAliveInterval=30 -p 443 -R 80:127.0.0.1:8080 free.pinggy.io"
+          env:
+            - name: HOME
+              value: /tmp
+          volumeMounts:
+            - name: tmp-volume
+              mountPath: /tmp
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
-            runAsUser: 1000
-            runAsGroup: 1000
+            runAsUser: 65534
+            runAsGroup: 65534
             capabilities:
               drop:
                 - ALL
