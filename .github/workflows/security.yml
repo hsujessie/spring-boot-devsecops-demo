@@ -32,6 +32,17 @@ jobs:
         with:
           fetch-depth: 0
 
+      # 1.5 淨化與設定 Docker Hub 使用者名稱
+      - name: 1.5 Setup Docker Hub Username
+        run: |
+          USER_RAW="${{ secrets.DOCKERHUB_USERNAME }}"
+          if [ -z "$USER_RAW" ]; then
+            USER_CLEAN="j9686"
+          else
+            USER_CLEAN=$(echo "$USER_RAW" | tr -d '\r' | xargs | tr '[:upper:]' '[:lower:]')
+          fi
+          echo "DOCKERHUB_USER=$USER_CLEAN" >> $GITHUB_ENV
+
       # 2. 設定 JDK 26 環境
       - name: 2. Set up JDK 26
         uses: actions/setup-java@0ab4596768b603586c0de567f2430c30f5b0d2b0 # v3.13.0
@@ -77,14 +88,14 @@ jobs:
       # 7. 打包 Docker Image (使用 Docker Hub 格式命名)
       - name: 7. Build Docker Image
         run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME || 'j9686' }}/spring-boot-demo-app:${{ github.sha }} -t ${{ secrets.DOCKERHUB_USERNAME || 'j9686' }}/spring-boot-demo-app:latest .
+          docker build -t ${{ env.DOCKERHUB_USER }}/spring-boot-demo-app:${{ github.sha }} -t ${{ env.DOCKERHUB_USER }}/spring-boot-demo-app:latest .
 
       # 8. 容器鏡像掃描 (Trivy for Container OS & Base Image)
       - name: 8. Container Image Scan (Trivy)
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
         with:
           scan-type: "image"
-          image-ref: "${{ secrets.DOCKERHUB_USERNAME || 'j9686' }}/spring-boot-demo-app:${{ github.sha }}"
+          image-ref: "${{ env.DOCKERHUB_USER }}/spring-boot-demo-app:${{ github.sha }}"
           severity: "HIGH,CRITICAL"
           exit-code: "0"
 
@@ -93,15 +104,15 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME || 'j9686' }}
+          username: ${{ env.DOCKERHUB_USER }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       # 10. 推送 Docker 映像檔至 Docker Hub (僅在推送到 main 分支時執行)
       - name: 10. Push Docker Image to Docker Hub
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          docker push ${{ secrets.DOCKERHUB_USERNAME || 'j9686' }}/spring-boot-demo-app:${{ github.sha }}
-          docker push ${{ secrets.DOCKERHUB_USERNAME || 'j9686' }}/spring-boot-demo-app:latest
+          docker push ${{ env.DOCKERHUB_USER }}/spring-boot-demo-app:${{ github.sha }}
+          docker push ${{ env.DOCKERHUB_USER }}/spring-boot-demo-app:latest
 
       # 11. 自動更新 Helm values.yaml 映像檔 Tag 並寫回 (僅在推送到 main 分支時執行 — GitOps)
       - name: 11. Update values.yaml & Git Push
