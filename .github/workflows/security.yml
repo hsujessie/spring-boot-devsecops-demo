@@ -77,14 +77,14 @@ jobs:
       # 7. 打包 Docker Image (使用 Docker Hub 格式命名)
       - name: 7. Build Docker Image
         run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/spring-boot-demo-app:${{ github.sha }} -t ${{ secrets.DOCKERHUB_USERNAME }}/spring-boot-demo-app:latest .
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME || 'j9686' }}/spring-boot-demo-app:${{ github.sha }} -t ${{ secrets.DOCKERHUB_USERNAME || 'j9686' }}/spring-boot-demo-app:latest .
 
       # 8. 容器鏡像掃描 (Trivy for Container OS & Base Image)
       - name: 8. Container Image Scan (Trivy)
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
         with:
           scan-type: "image"
-          image-ref: "${{ secrets.DOCKERHUB_USERNAME }}/spring-boot-demo-app:${{ github.sha }}"
+          image-ref: "${{ secrets.DOCKERHUB_USERNAME || 'j9686' }}/spring-boot-demo-app:${{ github.sha }}"
           severity: "HIGH,CRITICAL"
           exit-code: "0"
 
@@ -93,15 +93,15 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          username: ${{ secrets.DOCKERHUB_USERNAME || 'j9686' }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       # 10. 推送 Docker 映像檔至 Docker Hub (僅在推送到 main 分支時執行)
       - name: 10. Push Docker Image to Docker Hub
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/spring-boot-demo-app:${{ github.sha }}
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/spring-boot-demo-app:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME || 'j9686' }}/spring-boot-demo-app:${{ github.sha }}
+          docker push ${{ secrets.DOCKERHUB_USERNAME || 'j9686' }}/spring-boot-demo-app:latest
 
       # 11. 自動更新 Helm values.yaml 映像檔 Tag 並寫回 (僅在推送到 main 分支時執行 — GitOps)
       - name: 11. Update values.yaml & Git Push
