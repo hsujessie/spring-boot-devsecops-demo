@@ -21,13 +21,14 @@
     *   **Deep SCA 二進位審計**：將編譯產出的 JAR 包解開，透過 Trivy 以 `rootfs` 模式深層掃描實體套件 `BOOT-INF/lib/*.jar`。
     *   **Container 掃描**：以 Trivy 掃描 Container OS 的基礎漏洞。
     *   **Docker Hub 推送**：安全檢測全數通過後，自動登入 Docker Hub 並推送含有 Commit SHA 與 latest 雙標籤的 Docker 映像檔。
-    *   **GitOps K8s 自動更新**：在映像檔推送成功後，自動將最新的映像檔 Tag 更新至 `deployment.yaml` 並推回儲存庫。
+    *   **本地 K8s 自動部署**：藉由地端 Mac Self-hosted Runner 自動執行 `helm upgrade`，將最新的映像檔自動發布至本地 Kubernetes 叢集。
 *   **[Dockerfile](Dockerfile)**：**容器化配置（安全性加固）**
     *   **多階段構建 (Multi-stage Build)**：分開編譯環境與運行環境，縮減映像檔體積。
     *   **最小化運行環境**：採用 JRE Alpine 輕量基底，並建立非 root 用戶（`appuser`）執行 Java，降低被入侵後的危害防禦面。
-*   **[deployment.yaml](deployment.yaml)**：**Kubernetes 部署與服務設定（資安鎖定）**
+*   **[charts/spring-boot-demo/](charts/spring-boot-demo/)**：**Kubernetes Helm Chart 部署設定（資安鎖定與自動穿透）**
     *   **Pod/Container SecurityContext**：啟用 `runAsNonRoot: true`、`readOnlyRootFilesystem: true`（唯讀系統）並丟棄所有 Linux 特權（`drop: ALL`），嚴格遵守最小權限原則。
-    *   **K8s Service**：定義 `LoadBalancer` 服務，將容器內部的 `8080` 對應到外部的 `8080` 連接埠，方便本地直接透過 `localhost:8080` 進行存取。
+    *   **K8s Service**：定義 `LoadBalancer` 服務，將容器內部的 `8080` 對應到外部的 `8080` 連接埠，方便本地直接存取。
+    *   **Tunnel Sidecar**：在 Pod 中加入自動穿透側車容器，啟動時自動與 Pinggy 建立 SSH 隧道並配發對外公開測試 URL。
 
 ---
 
