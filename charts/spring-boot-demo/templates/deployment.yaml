@@ -40,6 +40,10 @@ spec:
           ports:
             # 宣告容器內部監聽的通訊埠
           - containerPort: {{ .Values.service.targetPort }}
+          env:
+            # 注入 Redis 連線主機名稱，指向 Helm 動態產生的 Redis 服務
+            - name: REDIS_HOST
+              value: "{{ .Release.Name }}-redis-service"
           
           # 容器層級的安全設定
           securityContext:

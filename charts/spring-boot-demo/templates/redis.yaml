@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # 使用 Release 名稱動態命名 Redis Deployment
+  name: {{ .Release.Name }}-redis
+  labels:
+    app: {{ .Release.Name }}-redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-redis
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-redis
+    spec:
+      containers:
+        - name: redis
+          # 使用輕量且安全的 Redis Alpine 映像檔
+          image: redis:alpine
+          ports:
+            - containerPort: 6379
+          resources:
+            limits:
+              cpu: 500m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            # 使用 Redis Alpine 預設的非 root 用戶 redis (UID: 999) 執行
+            runAsUser: 999
+            runAsGroup: 999
+            capabilities:
+              drop:
+                - ALL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  # 建立 ClusterIP 類型的內部 Service，供 Spring Boot 在 K8s 內部連線
+  name: {{ .Release.Name }}-redis-service
+spec:
+  selector:
+    app: {{ .Release.Name }}-redis
+  ports:
+    - protocol: TCP
+      port: 6379
+      targetPort: 6379
+  type: ClusterIP
