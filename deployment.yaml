@@ -25,7 +25,7 @@ spec:
 
       containers:
         - name: spring-boot-demo
-          image: spring-boot-demo-app:latest # 實際佈署時建議改為具體的版本 Tag 或 Commit SHA
+          image: j9686/spring-boot-demo-app:ef0bfa593f8a297895b5fa256163273e8f0cf266
           imagePullPolicy: IfNotPresent # 本地若已有對應映像檔則優先採用，無才從 Registry 下載
           ports:
             - containerPort: 8080 # 宣告容器內 Spring Boot 應用程式監聽的埠號
