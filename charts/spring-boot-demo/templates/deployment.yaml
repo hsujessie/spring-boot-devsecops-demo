@@ -1,76 +1,108 @@
+# 宣告 Kubernetes API 版本及資源種類
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  # 使用 Helm Release 名稱動態命名 Deployment
   name: {{ .Release.Name }}
   labels:
     app: {{ .Release.Name }}
 spec:
+  # Pod 副本數量，由 values.yaml 中的 replicaCount 決定
   replicas: {{ .Values.replicaCount }}
+  # 定義 Deployment 如何找到它所管理的 Pod
   selector:
     matchLabels:
       app: {{ .Release.Name }}
+  # 定義 Pod 的模板
   template:
     metadata:
       labels:
         app: {{ .Release.Name }}
     spec:
+      # Pod 層級的安全設定（適用於 Pod 內的所有容器）
       securityContext:
-        runAsNonRoot: {{ .Values.securityContext.pod.runAsNonRoot }}
-        runAsUser: {{ .Values.securityContext.pod.runAsUser }}
-        runAsGroup: {{ .Values.securityContext.pod.runAsGroup }}
-        fsGroup: {{ .Values.securityContext.pod.fsGroup }}
+        runAsNonRoot: {{ .Values.securityContext.pod.runAsNonRoot }} # 強制要求容器以非 root 用戶身份執行
+        runAsUser: {{ .Values.securityContext.pod.runAsUser }}       # 預設執行用戶的 UID
+        runAsGroup: {{ .Values.securityContext.pod.runAsGroup }}     # 預設執行群組的 GID
+        fsGroup: {{ .Values.securityContext.pod.fsGroup }}           # 掛載磁碟時的擁有者 GID
+      
       containers:
+        # ==========================================
+        # 1. Spring Boot 主應用程式容器
+        # ==========================================
         - name: spring-boot-demo
+          # 使用 values.yaml 中設定的倉庫與動態 Tag（由 CI/CD 自動填入）
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - containerPort: {{ .Values.service.targetPort }}
+            # 宣告容器內部監聽的通訊埠
+          - containerPort: {{ .Values.service.targetPort }}
+          
+          # 容器層級的安全設定
           securityContext:
-            allowPrivilegeEscalation: {{ .Values.securityContext.container.allowPrivilegeEscalation }}
-            readOnlyRootFilesystem: {{ .Values.securityContext.container.readOnlyRootFilesystem }}
+            allowPrivilegeEscalation: {{ .Values.securityContext.container.allowPrivilegeEscalation }} # 禁用特權提升，避免提權漏洞
+            readOnlyRootFilesystem: {{ .Values.securityContext.container.readOnlyRootFilesystem }}     # 啟用唯讀根系統，防止系統檔案被惡意竄改
             capabilities:
               drop:
+                # 丟棄所有 Linux 核心特權以降低潛在攻擊面
                 {{- toYaml .Values.securityContext.container.capabilities.drop | nindent 16 }}
+          
+          # 容器資源上限與請求量限制，防止資源洩漏導致節點當機
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          
           volumeMounts:
+            # 由於根目錄為唯讀，必須掛載一個暫時的可寫入磁碟到 /tmp，供 Tomcat 與 Spring Boot 寫入暫存檔
             - name: tmp-volume
               mountPath: /tmp
+          
+          # 存活探針：定時檢測服務是否還活著，若失敗 K8s 會自動重啟此容器
           livenessProbe:
             httpGet:
               path: /
               port: {{ .Values.service.targetPort }}
-            initialDelaySeconds: 30
-            periodSeconds: 10
+            initialDelaySeconds: 30 # 啟動後 30 秒才開始偵測
+            periodSeconds: 10       # 每 10 秒偵測一次
+          
+          # 就緒探針：定時檢測服務是否已準備好接收流量，若失敗會將 Pod 從 Service 中剔除，避免用戶連到啟動中的網頁
           readinessProbe:
             httpGet:
               path: /
               port: {{ .Values.service.targetPort }}
-            initialDelaySeconds: 15
-            periodSeconds: 5
+            initialDelaySeconds: 15 # 啟動後 15 秒開始偵測
+            periodSeconds: 5        # 每 5 秒偵測一次
 
         # ==========================================
-        # Tunnel Sidecar Container (自動外網穿透)
+        # 2. Tunnel Sidecar Container (自動外網穿透)
         # ==========================================
         - name: tunnel
+          # 使用 alpine/git 作為基礎映像檔，因其已預裝 ssh 客戶端
           image: alpine/git:latest
           command: ["/bin/sh", "-c"]
           args:
+            # 執行反向 SSH 隧道連線，將流量穿透轉發至同 Pod 共享網路的 127.0.0.1:8080
+            # -o StrictHostKeyChecking=no: 忽略未知金鑰警告
+            # -o UserKnownHostsFile=/dev/null: 將主機憑證丟棄，避免在唯讀系統中寫入 ~/.ssh/known_hosts 失敗
             - "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ServerAliveInterval=30 -p 443 -R 80:127.0.0.1:8080 free.pinggy.io"
           env:
+            # 將 SSH 的 HOME 目錄指向可寫入的 /tmp，供 SSH 客戶端載入暫存憑證與設定
             - name: HOME
               value: /tmp
           volumeMounts:
+            # 掛載暫時可寫入磁碟至 /tmp
             - name: tmp-volume
               mountPath: /tmp
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
+            # 必須使用內建的非 root 安全用戶 nobody (UID: 65534)，以符合 pod-level 的 runAsNonRoot 規範
             runAsUser: 65534
             runAsGroup: 65534
             capabilities:
               drop:
                 - ALL
+      
       volumes:
+        # 定義一個 emptyDir 類型的記憶體暫存磁碟，供兩個容器掛載至 /tmp 使用
         - name: tmp-volume
           emptyDir: {}

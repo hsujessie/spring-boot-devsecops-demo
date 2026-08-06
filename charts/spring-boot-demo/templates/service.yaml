@@ -1,12 +1,19 @@
+# 宣告 Kubernetes API 版本及資源種類
 apiVersion: v1
 kind: Service
 metadata:
+  # 使用 Helm Release 名稱加上後綴命名 Service
   name: {{ .Release.Name }}-service
 spec:
+  # 定義此 Service 應該把流量導向哪些 Pod
   selector:
+    # 這裡的標籤必須與 deployment.yaml 中的 Pod Label 相同
     app: {{ .Release.Name }}
   ports:
     - protocol: TCP
+      # Service 對外暴露的通訊埠（外部用戶存取的 Port）
       port: {{ .Values.service.port }}
+      # 目標 Pod 容器內部監聽的通訊埠（Spring Boot 的 Port）
       targetPort: {{ .Values.service.targetPort }}
+  # 服務類型，由 values.yaml 決定（本地測試設定為 LoadBalancer，會自動綁定至本機的 localhost:8080）
   type: {{ .Values.service.type }}
