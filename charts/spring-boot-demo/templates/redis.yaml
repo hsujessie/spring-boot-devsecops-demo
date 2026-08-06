@@ -1,53 +1,70 @@
+# 宣告 Kubernetes API 版本及資源種類，用 Deployment 部署 Redis
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  # 使用 Release 名稱動態命名 Redis Deployment
+  # 使用 Helm Release 名稱動態命名此 Redis Deployment
+  # 確保與 Spring Boot 的 Deployment 分開，不會產生名稱衝突
   name: {{ .Release.Name }}-redis
   labels:
     app: {{ .Release.Name }}-redis
 spec:
+  # Redis 為單一資料庫，本地練習只需啟動 1 個副本即可
   replicas: 1
+  # 定義此 Deployment 如何識別其所管理的 Redis Pod
   selector:
     matchLabels:
       app: {{ .Release.Name }}-redis
+  # 定義 Redis Pod 的模版設定
   template:
     metadata:
       labels:
+        # Pod 的識別標籤，必須與 selector 相同，也是 Service 尋找流量標的之依據
         app: {{ .Release.Name }}-redis
     spec:
       containers:
         - name: redis
-          # 使用輕量且安全的 Redis Alpine 映像檔
+          # 使用輕量級且安全的 Alpine 版本 Redis 官方映像檔
           image: redis:alpine
           ports:
+            # 宣告 Redis 容器內部監聽的預設通訊埠
             - containerPort: 6379
+          
+          # 限制容器所使用的系統資源，防止記憶體洩漏導致 K8s 節點崩潰
           resources:
             limits:
-              cpu: 500m
-              memory: 256Mi
+              cpu: 500m      # CPU 上限為 0.5 核心
+              memory: 256Mi  # 記憶體上限為 256MB
             requests:
-              cpu: 100m
-              memory: 128Mi
+              cpu: 100m      # 保證分配的 CPU 資源
+              memory: 128Mi  # 保證分配的記憶體資源
+          
+          # 容器層級的安全偏好設定
           securityContext:
-            allowPrivilegeEscalation: false
+            allowPrivilegeEscalation: false # 禁止提權，防範安全漏洞
+            # 由於 Redis 在預設情況下會定時將記憶體資料存盤 (RDB/AOF 檔案寫入)
+            # 因此這裡「不能」設為唯讀根檔案系統（即設為 false）
             readOnlyRootFilesystem: false
-            # 使用 Redis Alpine 預設的非 root 用戶 redis (UID: 999) 執行
+            # 使用 Redis Alpine 映像檔中內建的非 root 安全用戶 redis 帳號 (UID/GID 皆為 999)
             runAsUser: 999
             runAsGroup: 999
             capabilities:
               drop:
-                - ALL
+                - ALL       # 丟棄所有 Linux 核心特權以最大化安全性
 ---
+# 宣告 K8s Service 資源，用來作為 Redis 的網路連線入口
 apiVersion: v1
 kind: Service
 metadata:
-  # 建立 ClusterIP 類型的內部 Service，供 Spring Boot 在 K8s 內部連線
+  # 內部網路 Service 名稱，Spring Boot 可以直接透過 {{ .Release.Name }}-redis-service 連線到此
   name: {{ .Release.Name }}-redis-service
 spec:
   selector:
+    # 尋找身上貼有 app: {{ .Release.Name }}-redis 標籤的 Pod 進流流量轉發
     app: {{ .Release.Name }}-redis
   ports:
-    - protocol: TCP
-      port: 6379
-      targetPort: 6379
+    - protocol: TCP # 採用 TCP 傳輸協定
+      port: 6379    # Service 對外暴露的通訊埠
+      targetPort: 6379 # 流量轉發進 Redis 容器內部的實際通訊埠
+  # 服務類型設為 ClusterIP（K8s 預設值）
+  # 這代表此服務「僅供 K8s 叢集內部」溝通，完全不會暴露至外網，極具資安防護性
   type: ClusterIP
