@@ -1,8 +1,10 @@
 # 宣告 Kubernetes API 版本及資源種類
 apiVersion: v1
+# 在k8s中，用 Service 來管理 Pod 的流量入口 👉 type: LoadBalancer
 kind: Service
 metadata:
-  # 使用 Helm Release 名稱加上後綴命名 Service
+  # 使用 Helm Release 名稱並加上「-service」後綴來命名此 Service 資源。
+  # 這樣做能確保 Service 的名稱能與對應的 Deployment 完美關聯，同時防止在同一個 K8s 命名空間內發生資源命名衝突。
   name: {{ .Release.Name }}-service
 spec:
   # 定義此 Service 應該把流量導向哪些 Pod

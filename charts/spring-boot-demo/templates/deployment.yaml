@@ -1,10 +1,13 @@
 # 宣告 Kubernetes API 版本及資源種類
 apiVersion: apps/v1
+# 在K8s中，用 Deployment 來管理 Pod 的部署、擴展、升級與回滾
 kind: Deployment
 metadata:
-  # 使用 Helm Release 名稱動態命名 Deployment
+  # 使用 Helm Release 名稱動態命名此 Deployment 資源。
+  # 這樣做能確保在同一個 K8s 命名空間內部署多個相同應用程式時，資源名稱不會產生衝突。
   name: {{ .Release.Name }}
   labels:
+    # 為此 Deployment 資源本身貼上識別標籤，便於日後進行資源篩選、分類與管理。
     app: {{ .Release.Name }}
 spec:
   # Pod 副本數量，由 values.yaml 中的 replicaCount 決定
@@ -13,7 +16,7 @@ spec:
   selector:
     matchLabels:
       app: {{ .Release.Name }}
-  # 定義 Pod 的模板
+  # 定義 Pod 的模板: A pod is used to run a container.
   template:
     metadata:
       labels:
