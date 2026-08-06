@@ -22,8 +22,9 @@
 3. **`charts/spring-boot-demo/` (Helm Chart)**：
    * **[Chart.yaml](charts/spring-boot-demo/Chart.yaml)**：定義 Chart 的基本描述與版本資訊。
    * **[values.yaml](charts/spring-boot-demo/values.yaml)**：全域變數設定檔，預設映像檔倉庫已設定為 `j9686/spring-boot-demo-app`。
-   * **[templates/deployment.yaml](charts/spring-boot-demo/templates/deployment.yaml)**：K8s 部署配置，已整合 **Tunnel 側車容器 (Sidecar)**。
-   * **[templates/service.yaml](charts/spring-boot-demo/templates/service.yaml)**：K8s Service 配置，定義 `LoadBalancer` 服務。
+   * **[templates/deployment.yaml](charts/spring-boot-demo/templates/deployment.yaml)**：K8s 部署配置，已整合 **Tunnel 側車容器 (Sidecar)**，並注入連線至 Redis Service 的 `REDIS_HOST` 環境變數。
+   * **[templates/service.yaml](charts/spring-boot-demo/templates/service.yaml)**：K8s Service 配置，定義 `LoadBalancer` 服務以供本地直接連線。
+   * **[templates/redis.yaml](charts/spring-boot-demo/templates/redis.yaml)**：K8s Redis 部署配置，包含獨立的 Redis Deployment 與內部 `ClusterIP` Service，僅限叢集內部連通，防止外網直接存取。
 
 ---
 
@@ -59,7 +60,7 @@
  4. 本地 Mac 執行 `./local_deploy.sh` 腳本 (一鍵拉取最新 Tag 並利用 Helm 部署)
          │
          ▼
- 5. 本地 K8s 自動拉取 Image，並在同個 Pod 內啟動 Spring Boot 與 Tunnel 容器
+ 5. 本地 K8s 自動拉取 Image，部署 Spring Boot 主程式、Redis 資料庫並啟動 Tunnel 側車容器
          │
          ▼ (Tunnel 容器自動連線至 Pinggy 建立隧道)
  6. 腳本自動從 Tunnel 日誌中過濾並輸出外網公開存取網址 (URL)
@@ -85,9 +86,10 @@
 *   執行 `helm upgrade --install` 指令，Helm 會自動讀取最新變數，並更新本地 Docker Desktop 的 K8s 叢集。
 *   地端 K8s 叢集拉取 Docker Hub 的最新映像檔，並運行 2 個 Pod 副本。
 
-### 5. 側車容器 (Sidecar) 與自動外網穿透
-每個 Pod 內部共享同一個網路空間，其中包含兩個容器：
-*   **`spring-boot-demo`**：運行您的 Java 應用程式（監聽 `8080` 埠）。
+### 5. 側車容器 (Sidecar)、Redis 快取與自動外網穿透
+每個 Pod 內部共享同一個網路空間，其中包含兩個容器，且與內部的 Redis 進行連線：
+*   **`spring-boot-demo`**：運行您的 Java 應用程式（監聽 `8080` 埠），已整合 `StringRedisTemplate`，啟動時會透過環境變數 `REDIS_HOST` 連線至對應的 K8s 內部 Redis 服務。
+*   **`redis` (獨立服務)**：由 `redis.yaml` 啟動，獨立運行於叢集中，透過 `ClusterIP` 提供 `6379` 埠服務，為 Spring Boot 程式提供瀏覽計數快取，不對外網公開以確保資安。
 *   **`tunnel` (Sidecar)**：採用 Alpine Git（內置 SSH），啟動時自動透過 443 埠連線至 `free.pinggy.io` 建立反向 SSH 隧道，將流量直接引導至同一個 Pod 內部的 `127.0.0.1:8080`。
 *   部署腳本最後會自動抓取 Pod 的 Sidecar 日誌，將 Pinggy 配發的隨機 HTTPS 公開網址（例如 `https://xxxx.free.pinggy.link`）直接輸出於您的終端機上，外部人員即可直接透過此 URL 進行存取驗證！
 

@@ -8,9 +8,9 @@
 *   **Java 程式碼管理**
     *   [DemoApplication.java](src/main/java/com/example/demo/DemoApplication.java)：Spring Boot 應用程式的啟動進入點（Entry Point）。
     *   [ServletInitializer.java](src/main/java/com/example/demo/ServletInitializer.java)：設定外置 Servlet 容器（如 Tomcat）的初始化類別（本專案預設打包為 JAR，但保留了 WAR 部署的彈性結構）。
-    *   [FunRestController.java](src/main/java/com/example/demo/rest/FunRestController.java)：定義 Web REST API 路由與商務邏輯的控制器（Controller）。
+    *   [FunRestController.java](src/main/java/com/example/demo/rest/FunRestController.java)：定義 Web REST API 路由與商務邏輯的控制器（Controller），已整合 Redis 連線並實作首頁造訪累加計數器。
 *   **資源配置檔**
-    *   [application.properties](src/main/resources/application.properties)：Spring Boot 應用程式的參數配置檔（如連接埠、資料庫連線等設定）。
+    *   [application.properties](src/main/resources/application.properties)：Spring Boot 應用程式的參數配置檔，已包含 Redis 連線主機與 Port 的動態設定。
 
 ---
 
@@ -29,11 +29,12 @@
     *   **Pod/Container SecurityContext**：啟用 `runAsNonRoot: true`、`readOnlyRootFilesystem: true`（唯讀系統）並丟棄所有 Linux 特權（`drop: ALL`），嚴格遵守最小權限原則。
     *   **K8s Service**：定義 `LoadBalancer` 服務，將容器內部的 `8080` 對應到外部的 `8080` 連接埠，方便本地直接存取。
     *   **Tunnel Sidecar**：在 Pod 中加入自動穿透側車容器，啟動時自動與 Pinggy 建立 SSH 隧道並配發對外公開測試 URL。
+    *   **[redis.yaml](charts/spring-boot-demo/templates/redis.yaml) [NEW]**：定義 Redis 專屬的 Deployment 與內部 ClusterIP Service，為 Spring Boot 提供極速快取運算服務，完全對外隔離以策安全。
 
 ---
 
 ### 3. ⚙️ 專案建置與依賴管理
-*   **[pom.xml](pom.xml)**：Maven 專案的靈魂設定檔，宣告專案依賴（如 Spring Boot Starter Web）、Java 版本（JDK 26）、打包格式（JAR），以及編譯用外掛程式。
+*   **[pom.xml](pom.xml)**：Maven 專案的靈魂設定檔，宣告專案依賴（包含 WebMVC 與 `spring-boot-starter-data-redis` 用於連線快取）、Java 版本（JDK 26）、打包格式（JAR），以及編譯用外掛程式。
 *   **`mvnw` / `mvnw.cmd` / `.mvn/`**：Maven Wrapper 腳本，用來鎖定 Maven 編譯工具的版本，確保所有開發者與 CI/CD 機台使用的是相同的 Maven 建置環境。
 
 ---
