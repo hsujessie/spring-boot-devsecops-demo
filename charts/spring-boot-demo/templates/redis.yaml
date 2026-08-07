@@ -67,4 +67,4 @@ spec:
       targetPort: 6379 # 流量轉發進 Redis 容器內部的實際通訊埠
   # 服務類型設為 ClusterIP（K8s 預設值）
   # 這代表此服務「僅供 K8s 叢集內部」溝通，完全不會暴露至外網，極具資安防護性
-  type: ClusterIP
+  type: ClusterIP # ClusterIP：exposes a set of pods to other objects in the cluster.
