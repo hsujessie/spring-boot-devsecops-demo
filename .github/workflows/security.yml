@@ -2,19 +2,21 @@ name: DevSecOps Spring Boot Pipeline
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "develop"]
     paths-ignore:
       - "README.md"
       - "ARCHITECTURE.md"
       - "DOCKER_K8S_GUIDE.md"
+      - "MONITORING_GUIDE.md"
       - "local_k8s_setup.md"
       - "charts/spring-boot-demo/values.yaml"
   pull_request:
-    branches: ["main"]
+    branches: ["main", "develop"]
     paths-ignore:
       - "README.md"
       - "ARCHITECTURE.md"
       - "DOCKER_K8S_GUIDE.md"
+      - "MONITORING_GUIDE.md"
       - "local_k8s_setup.md"
       - "charts/spring-boot-demo/values.yaml"
 
@@ -107,16 +109,16 @@ jobs:
           username: ${{ env.DOCKERHUB_USER }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 10. 推送 Docker 映像檔至 Docker Hub (僅在推送到 main 分支時執行)
+      # 10. 推送 Docker 映像檔至 Docker Hub (僅在推送到 main 或 develop 分支時執行)
       - name: 10. Push Docker Image to Docker Hub
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
         run: |
           docker push ${{ env.DOCKERHUB_USER }}/spring-boot-demo-app:${{ github.sha }}
           docker push ${{ env.DOCKERHUB_USER }}/spring-boot-demo-app:latest
 
-      # 11. 自動更新 Helm values.yaml 映像檔 Tag 並寫回 (僅在推送到 main 分支時執行 — GitOps)
+      # 11. 自動更新 Helm values.yaml 映像檔 Tag 並寫回 (僅在推送到 main 或 develop 分支時執行 — GitOps)
       - name: 11. Update values.yaml & Git Push
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
         run: |
           # 使用 sed 動態替換 values.yaml 中的 image.tag 欄位
           sed -i 's|tag:.*|tag: "${{ github.sha }}"|g' charts/spring-boot-demo/values.yaml
@@ -126,5 +128,5 @@ jobs:
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add charts/spring-boot-demo/values.yaml
           git commit -m "chore(deploy): update deployment image tag to ${{ github.sha }} [skip ci]"
-          git pull --rebase origin main
+          git pull --rebase origin ${{ github.ref_name }}
           git push

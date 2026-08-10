@@ -1,0 +1,77 @@
+# 1. Grafana 自動載入 Prometheus 資料源 (Auto-provisioning)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-grafana-datasource
+  labels:
+    app: {{ .Release.Name }}-grafana
+data:
+  datasource.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://{{ .Release.Name }}-prometheus-service:9090
+        isDefault: true
+        editable: true
+---
+# 2. Grafana Deployment 部署設定
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-grafana
+  labels:
+    app: {{ .Release.Name }}-grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-grafana
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: GF_SECURITY_ADMIN_USER
+              value: "admin"
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              value: "admin"
+            - name: GF_USERS_ALLOW_SIGN_UP
+              value: "false"
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          volumeMounts:
+            - name: datasource-volume
+              mountPath: /etc/grafana/provisioning/datasources
+      volumes:
+        - name: datasource-volume
+          configMap:
+            name: {{ .Release.Name }}-grafana-datasource
+---
+# 3. Grafana Service 外部訪問服務
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-grafana-service
+  labels:
+    app: {{ .Release.Name }}-grafana
+spec:
+  selector:
+    app: {{ .Release.Name }}-grafana
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+  type: LoadBalancer # 自動綁定至本地 http://localhost:3000

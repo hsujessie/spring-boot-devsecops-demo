@@ -1,0 +1,75 @@
+# 1. Prometheus 抓取設定 ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-prometheus-config
+  labels:
+    app: {{ .Release.Name }}-prometheus
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s     # 每 15 秒抓取一次指標
+      evaluation_interval: 15s
+
+    scrape_configs:
+      # 抓取 Spring Boot 應用程式的 JVM 與 Actuator 指標
+      - job_name: 'spring-boot-app'
+        metrics_path: '/actuator/prometheus'
+        static_configs:
+          - targets: ['{{ .Release.Name }}-service:{{ .Values.service.port }}']
+---
+# 2. Prometheus Deployment 部署設定
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-prometheus
+  labels:
+    app: {{ .Release.Name }}-prometheus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-prometheus
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-prometheus
+    spec:
+      containers:
+        - name: prometheus
+          image: prom/prometheus:latest
+          args:
+            - "--config.file=/etc/prometheus/prometheus.yml"
+            - "--storage.tsdb.path=/prometheus"
+          ports:
+            - containerPort: 9090
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          volumeMounts:
+            - name: prometheus-config-volume
+              mountPath: /etc/prometheus
+      volumes:
+        - name: prometheus-config-volume
+          configMap:
+            name: {{ .Release.Name }}-prometheus-config
+---
+# 3. Prometheus 內部連線 Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-prometheus-service
+  labels:
+    app: {{ .Release.Name }}-prometheus
+spec:
+  selector:
+    app: {{ .Release.Name }}-prometheus
+  ports:
+    - protocol: TCP
+      port: 9090
+      targetPort: 9090
+  type: ClusterIP # 僅限叢集內部供 Grafana 查詢
