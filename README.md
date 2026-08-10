@@ -1,5 +1,6 @@
-# 📂 Spring Boot DevSecOps & Observability 專案架構說明
+# ☕️ Spring Boot DevSecOps & Observability 專案架構說明
 
+## 📝 簡介 (Introduction)
 本專案是一個導入 **DevSecOps** 縱深安全防禦（包含 SAST、雙軌 SCA、容器安全加固、GitOps 自動更新）與 **雲原生可觀測性監控體系（Prometheus + Grafana）** 的 Spring Boot 專案。
 
 ---
@@ -105,7 +106,7 @@ spring-boot-demo/
 
 ## 📂 專案模組與檔案角色劃分
 
-### 1. 📂 核心原始碼與設定 (`src/` 目錄)
+### 1. ⚙️ 核心原始碼與設定 (`src/` 目錄)
 *   **Java 程式碼管理**
     *   [DemoApplication.java](src/main/java/com/example/demo/DemoApplication.java)：Spring Boot 應用程式的啟動進入點。
     *   [ServletInitializer.java](src/main/java/com/example/demo/ServletInitializer.java)：外置 Servlet 容器初始化類別。
