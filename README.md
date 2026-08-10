@@ -1,6 +1,19 @@
-# 🛡️ Spring Boot DevSecOps & GitOps Demo 專案
+# 🛡️ Spring Boot DevSecOps, GitOps & Observability 專案
 
-本專案是一個導入業界標準 **DevSecOps** 安全防護機制（SAST、雙軌 SCA、容器安全）與 **GitOps 自動化部署** 的 Spring Boot 示範專案。專案已整合 **Java 26、Redis 快取**，以及 K8s 自動化外網穿透測試。
+本專案是一個導入業界標準 **DevSecOps** 安全防護機制（SAST、雙軌 SCA、容器安全加固）、**GitOps 自動化部署** 與 **Prometheus + Grafana 雲原生可觀測性** 的 Spring Boot 示範專案。專案已整合 **Java 26、Redis 快取**，以及 K8s 自動化外網穿透測試。
+
+---
+
+## 📚 專案核心文件導航 (Documentation Hub)
+
+為了方便開發者與維運團隊查閱，本專案將完整架構與操作手冊模組化為以下 4 份核心文件：
+
+| 文件名稱 | 說明與主要內容 |
+| :--- | :--- |
+| **[README.md](README.md)** | **專案總覽入口**：專案簡介、目錄結構、雙軌 SCA 防護對比表與快速一鍵部署。 |
+| **[ARCHITECTURE.md](ARCHITECTURE.md)** | **系統架構說明書**：全系統運行架構圖、模組職責劃分與 DevSecOps 流水線設計。 |
+| **[DOCKER_K8S_GUIDE.md](DOCKER_K8S_GUIDE.md)** | **容器化與 K8s 部署指南**：Dockerfile 安全加固、K8s 資源宣告、Helm Chart 與 Sidecar 穿透。 |
+| **[MONITORING_GUIDE.md](MONITORING_GUIDE.md)** | **可觀測性與監控指南**：Prometheus、Grafana、ServiceMonitor、30+ 官方大盤與網路隔離邊界。 |
 
 ---
 
@@ -19,16 +32,18 @@ spring-boot-demo/
 │   └── templates/
 │       ├── deployment.yaml   # Spring Boot 主程式 Deployment（整合 Tunnel 側車容器）
 │       ├── service.yaml      # Spring Boot 外部 Service（LoadBalancer 埠口映射）
-│       └── redis.yaml        # Redis 專屬 Deployment 與內部 Service (ClusterIP 對外隔離)
+│       ├── redis.yaml        # Redis 專屬 Deployment 與內部 Service (ClusterIP 對外隔離)
+│       └── servicemonitor.yaml # Prometheus Operator 跨空間指標採集規則
 │
-├── src/                      # Java 26 原始碼 (與 Redis 快取整合，實作瀏覽數累加)
+├── src/                      # Java 26 原始碼 (整合 Redis 快取與 Actuator 監控)
 │   └── main/java/com/example/demo/rest/FunRestController.java
 │
 ├── Dockerfile                # 容器化定義檔 (Multi-stage Build & Non-root 權限加固)
 ├── local_deploy.sh           # 地端一鍵拉取、自動部署與外網網址輸出腳本 (Unix LF)
 ├── pom.xml                   # Maven 專案設定檔 (宣告依賴套件與 Java 26)
 ├── ARCHITECTURE.md           # 詳細系統元件架構設計說明書
-└── DOCKER_K8S_GUIDE.md       # Docker、Kubernetes 與 Helm 的整合部署運作指南
+├── DOCKER_K8S_GUIDE.md       # Docker、Kubernetes 與 Helm 的整合部署運作指南
+└── MONITORING_GUIDE.md       # Prometheus 與 Grafana 雲原生可觀測性監控指南
 ```
 
 ---
@@ -57,7 +72,7 @@ spring-boot-demo/
 
 ## 🛡️ CI/CD DevSecOps 安全檢測防線
 
-工作流設定於 [.github/workflows/security.yml](.github/workflows/security.yml)，當代碼推送至 `main` 時，會觸發以下安全防禦措施：
+工作流設定於 [.github/workflows/security.yml](.github/workflows/security.yml)，當代碼推送至 `main` 或 `develop` 時，會觸發以下安全防禦措施：
 
 1.  **SAST (靜態應用程式安全測試)**：使用 **Semgrep** 靜態掃描 Java 原始碼，及早發現邏輯漏洞、OWASP Top 10 風險與寫死的機密資訊（Hardcoded Secrets）。
 2.  **雙軌 SCA (軟體組成分析)**：比對第三方套件的已知 CVE 漏洞。
@@ -102,4 +117,4 @@ spring-boot-demo/
 2.  執行 `helm upgrade --install` 發布/更新本地部署至 K8s 叢集。
 3.  以 `kubectl rollout status` 暫停並同步等待 K8s 滾動更新順利完成。
 4.  自動抓取 Pod 的 Sidecar 日誌，在螢幕上輸出 Pinggy 產生的 **HTTPS 外網公開網址**。
-5.  點擊公開網址，即可在瀏覽器上查看整合 Redis 的網頁累計造訪次數！
+5.  輸出 Grafana 儀表板存取網址（`http://localhost:3000`），帳號/密碼為 `admin` / `admin`。

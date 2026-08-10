@@ -8,7 +8,6 @@ on:
       - "ARCHITECTURE.md"
       - "DOCKER_K8S_GUIDE.md"
       - "MONITORING_GUIDE.md"
-      - "local_k8s_setup.md"
       - "charts/spring-boot-demo/values.yaml"
   pull_request:
     branches: ["main", "develop"]
@@ -17,7 +16,6 @@ on:
       - "ARCHITECTURE.md"
       - "DOCKER_K8S_GUIDE.md"
       - "MONITORING_GUIDE.md"
-      - "local_k8s_setup.md"
       - "charts/spring-boot-demo/values.yaml"
 
 jobs:
