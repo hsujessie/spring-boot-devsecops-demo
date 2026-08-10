@@ -12,9 +12,9 @@
 │  【業務區：default 命名空間】                                                      │
 │   ├── [Spring Boot Pod 副本] (Java 26) ──► 暴露 /actuator/prometheus             │
 │   ├── [Redis Pod] (快取資料庫)                                                    │
-│   └── [ServiceMonitor] (告訴 Prometheus：跨 Namespace 來抓取我！)                  │
+│   └── [ServiceMonitor] (宣告式服務發現與跨空間指標採集規則 CRD)                    │
 │                                                                                  │
-│                                 ▲ (跨 Namespace 自動抓取)                        │
+│                                 ▲ (跨 Namespace 宣告式指標採集)                  │
 │                                 │                                                │
 │  【維運監控專區：monitoring 命名空間】 (使用官方 kube-prometheus-stack Helm Chart)  │
 │   ├── [Prometheus Operator 監控大腦] (時序資料庫 TSDB)                            │
