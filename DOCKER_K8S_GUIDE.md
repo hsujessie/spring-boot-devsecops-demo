@@ -1,8 +1,8 @@
-# 🐳 Docker 與 Kubernetes (K8s) 架構整合與自動化部署
+# 🐳 Docker、K8s 與 Helm 雲原生部署架構
 
 ---
 
-## 🏗️ 專案架構分層說明 (Helm 整合)
+## 🏗️ 容器化與 Helm 部署設定檔分層
 1. **[Dockerfile](Dockerfile)**：採用多階段構建，包裝為安全且唯讀的 Docker 映像檔。
 2. **`charts/spring-boot-demo/` (Helm Chart)**：
    * **[Chart.yaml](charts/spring-boot-demo/Chart.yaml)**：定義 Chart 的基本描述與版本資訊。
@@ -10,12 +10,13 @@
    * **[templates/deployment.yaml](charts/spring-boot-demo/templates/deployment.yaml)**：K8s 部署配置，已整合 **Tunnel 側車容器 (Sidecar)**，並注入連線至 Redis Service 的 `REDIS_HOST` 環境變數。
    * **[templates/service.yaml](charts/spring-boot-demo/templates/service.yaml)**：K8s Service 配置，定義 `LoadBalancer` 服務以供本地直接連線。
    * **[templates/redis.yaml](charts/spring-boot-demo/templates/redis.yaml)**：K8s Redis 部署配置，包含獨立的 Redis Deployment 與內部 `ClusterIP` Service，僅限叢集內部連通，防止外網直接存取。
+   * **[templates/servicemonitor.yaml](charts/spring-boot-demo/templates/servicemonitor.yaml)**：定義 Prometheus Operator 跨 Namespace 抓取 Actuator 指標的宣告式規則。
 
 ---
 
 ## 🤝 Docker、K8s 與 Helm 之間的關係與職責
 
-我們可以使用經典的**「集裝箱貨運物流」**來理解三者的分工與角色：
+可以使用經典的**「集裝箱貨運物流」**來理解三者的分工與角色：
 
 | 技術 | 實體比喻 | 在本專案中的職責 |
 | :--- | :--- | :--- |
@@ -27,22 +28,22 @@
 
 ## 🔄 完整閉環：從「代碼提交」到「外部人員連線」的自動化流程
 
-本專案實作了一套兼顧安全（針對公開儲存庫）與高度自動化的部署及外網存取鏈條，具體流程如下：
+本專案實作了一套兼顧安全與高度自動化的部署及外網存取鏈條，具體流程如下：
 
 ```text
 [ 開發人員 Push 程式 ] 
          │
          ▼
- 1. GitHub 雲端沙盒 (ubuntu-latest) 執行 SAST/SCA 安全檢測
+ 1. GitHub Actions 流水線 (ubuntu-latest) 執行 SAST/SCA 安全檢測
          │
          ▼
- 2. 雲端沙盒呼叫 Docker 編譯映像檔並 Push 至 Docker Hub 倉庫
+ 2. GitHub Actions 呼叫 Docker 編譯映像檔並 Push 至 Docker Hub 倉庫
          │
          ▼
- 3. 雲端沙盒自動修改 `values.yaml` 中的 tag 欄位 (寫入最新 Commit SHA)
+ 3. GitHub Actions 自動修改 `values.yaml` 中的 tag 欄位 (寫入最新 Commit SHA)
          │
-         ▼ (Git Push 寫回 GitHub Repo，Commit 標記為 [skip ci])
- 4. 本地 Mac 執行 `./local_deploy.sh` 腳本 (一鍵拉取最新 Tag 並利用 Helm 部署)
+         ▼ (GitOps 自動寫回 GitHub Repo，Commit 標記為 [skip ci])
+ 4. 本地執行 `./local_deploy.sh` 腳本 (一鍵拉取最新 Tag 並利用 Helm 部署)
          │
          ▼
  5. 本地 K8s 自動拉取 Image，部署 Spring Boot 主程式、Redis 資料庫並啟動 Tunnel 側車容器
@@ -54,24 +55,9 @@
 [ 外部人員成功存取網頁 ]
 ```
 
-### 1. 代碼變更與安全流水線 (GitHub CI)
-當您提交程式碼至 GitHub `main` 分支時，GitHub Actions 的雲端伺服器（`ubuntu-latest`）會自動啟動，執行 [security.yml](.github/workflows/security.yml) 安全檢測：
-*   **SAST 掃描**：使用 Semgrep 靜態分析代碼是否有漏洞或寫死的密鑰。
-*   **SCA 掃描**：使用 Trivy 針對 `pom.xml` 與解包後的二進位 `BOOT-INF/lib/*.jar` 進行依賴套件漏洞掃描。
+---
 
-### 2. 映像檔打包與上傳
-當所有安全防線皆確認通過後，工作流會以 Docker 自動打包 Image（標籤為最新的 Commit SHA 與 `latest`），並自動將其推送至 Docker Hub 映像檔儲存庫中。
-
-### 3. GitOps 部署設定自動更新
-映像檔上傳完成後，工作流會以 `sed` 指令自動將 `charts/spring-boot-demo/values.yaml` 中的 `tag:` 欄位更新為最新的映像檔 Tag（最新的 Commit SHA），並自動 Git commit / push 回您的公開儲存庫，實現部署設定的版本控制。
-
-### 4. Kubernetes 本地一鍵部署 (Helm)
-當您看到 Actions 綠燈通過後，您只需在本地執行 `./local_deploy.sh` 腳本：
-*   該腳本會先執行 `git pull` 將最新的代碼與已被 Actions 修改的 `values.yaml` 同步回本機。
-*   執行 `helm upgrade --install` 指令，Helm 會自動讀取最新變數，並更新本地 Docker Desktop 的 K8s 叢集。
-*   地端 K8s 叢集拉取 Docker Hub 的最新映像檔，並運行 2 個 Pod 副本。
-
-### 5. 側車容器 (Sidecar)、Redis 快取與自動外網穿透
+## 🌐 側車容器 (Sidecar)、Redis 快取與網路架構詳解
 每個 Pod 內部共享同一個網路空間，其中包含兩個容器，且與內部的 Redis 進行連線：
 *   **`spring-boot-demo`**：運行您的 Java 應用程式（監聽 `8080` 埠），已整合 `StringRedisTemplate`，啟動時會透過環境變數 `REDIS_HOST` 連線至對應的 K8s 內部 Redis 服務。
 *   **`redis` (獨立服務)**：由 `redis.yaml` 啟動，獨立運行於叢集中，透過 `ClusterIP` 提供 `6379` 埠服務，為 Spring Boot 程式提供瀏覽計數快取，不對外網公開以確保資安。
