@@ -62,8 +62,8 @@ spring-boot-demo/
 │                                           ▼ (3. local_deploy.sh / Helm 同步) │
 │   ┌────────────────────── Kubernetes 叢集 (Docker Desktop) ──────────────┐   │
 │   │                                                                      │   │
-│   │  【業務命名空間: default】                【監控命名空間: monitoring】  │   │
-│   │   ├── [Spring Boot 應用 (Java 26)]         ├── [Prometheus TSDB 時序庫] │   │
+│   │  【應用程式命名空間: default】              【監控命名空間: monitoring】   │   │
+│   │   ├── [Spring Boot 應用 (Java 26)]        ├── [Prometheus TSDB 時序庫] │   │
 │   │   ├── [Redis 快取 (計數器 6379)]           └── [Grafana 平台 (Port 3000)]│  │
 │   │   └── [Tunnel 側車 (SSH 反向隧道)]                                    │   │
 │   │                 │                                                    │   │
@@ -115,7 +115,7 @@ spring-boot-demo/
 ### 4. 🌐 核心端點與驗證路由 (Endpoints)
 | 端點路徑 (Path) | HTTP 方法 | 功能說明 | 備註 |
 | :--- | :--- | :--- | :--- |
-| `/` | `GET` | 業務首頁，自動累加 Redis `page_views` 計數並回傳累計次數 | 驗證 Redis 快取連線與業務邏輯 |
+| `/` | `GET` | 首頁，自動累加 Redis `page_views` 計數並回傳累計次數 | 驗證 Redis 快取連線與業務邏輯 |
 | `/actuator/health` | `GET` | 應用程式健康狀態檢查 (`UP` / `DOWN`) | 供 Kubernetes Liveness/Readiness 探針使用 |
 | `/actuator/prometheus` | `GET` | Prometheus 格式的度量指標數據 | 供 Prometheus Operator 抓取並於 Grafana 呈現 |
 | `/actuator/info` | `GET` | 應用程式基礎資訊 | Actuator 內建端點 |
