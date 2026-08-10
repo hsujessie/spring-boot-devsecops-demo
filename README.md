@@ -28,7 +28,7 @@ spring-boot-demo/
 │   │   │   ├── DemoApplication.java        # Spring Boot 應用程式入口
 │   │   │   ├── ServletInitializer.java     # 外置 Servlet 容器初始化類別
 │   │   │   └── rest/
-│   │   │       └── FunRestController.java  # REST 控制器 (整合 Redis 計數器)
+│   │   │       └── FunRestController.java  # REST Controller (整合 Redis 計數器)
 │   │   └── resources/
 │   │       └── application.properties      # 應用程式配置 (Redis 與 Actuator 端點)
 │   └── test/                 # 測試案例目錄
