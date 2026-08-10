@@ -20,8 +20,6 @@ echo " ⏳ 3. 正在等待 K8s Pod 滾動更新完成"
 echo "=================================================="
 kubectl rollout status deployment/spring-boot-demo
 kubectl rollout status deployment/spring-boot-demo-redis
-kubectl rollout status deployment/spring-boot-demo-prometheus
-kubectl rollout status deployment/spring-boot-demo-grafana
 
 echo ""
 echo "=================================================="

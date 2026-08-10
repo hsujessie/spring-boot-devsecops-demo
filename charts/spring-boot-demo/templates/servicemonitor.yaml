@@ -1,0 +1,17 @@
+# 宣告 Prometheus Operator 的 ServiceMonitor 自訂資源
+# 用於讓 monitoring 空間中的 Prometheus 自動跨 Namespace 發現並抓取 Spring Boot 的 Actuator 指標
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Release.Name }}-servicemonitor
+  labels:
+    app: {{ .Release.Name }}
+    release: prometheus-stack # 關聯至 kube-prometheus-stack Release
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  endpoints:
+    - port: http
+      path: /actuator/prometheus
+      interval: 15s

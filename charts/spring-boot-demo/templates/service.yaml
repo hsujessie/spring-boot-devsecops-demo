@@ -12,7 +12,8 @@ spec:
     # 這裡的標籤必須與 deployment.yaml 中的 Pod Label 相同 👉(spec.template.metadata.labels.app)
     app: {{ .Release.Name }}
   ports:
-    - protocol: TCP # 傳輸協定類型，預設為 TCP
+    - name: http
+      protocol: TCP # 傳輸協定類型，預設為 TCP
       # Service 對外暴露的通訊埠（外部用戶存取的 Port）
       port: {{ .Values.service.port }}
       # 目標 Pod 容器內部監聽的通訊埠（Spring Boot 的 Port）
