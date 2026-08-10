@@ -101,9 +101,9 @@ jobs:
           severity: "HIGH,CRITICAL"
           exit-code: "0"
 
-      # 9. 登入 Docker Hub (僅在推送到 main 分支時執行)
+      # 9. 登入 Docker Hub (僅在推送到 main 或 develop 分支時執行)
       - name: 9. Login to Docker Hub
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
         uses: docker/login-action@v3
         with:
           username: ${{ env.DOCKERHUB_USER }}
