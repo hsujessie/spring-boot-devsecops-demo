@@ -36,8 +36,8 @@ spring-boot-demo/
 ├── Dockerfile                # 容器化定義檔 (Multi-stage Build & Non-root 權限加固)
 ├── local_deploy.sh           # 地端一鍵拉取、自動部署與外網網址輸出腳本 (Unix LF)
 ├── pom.xml                   # Maven 專案設定檔 (宣告依賴套件與 Java 26)
-├── DOCKER_K8S_GUIDE.md       # Docker、Kubernetes 與 Helm 的整合部署運作指南
-└── MONITORING_GUIDE.md       # Prometheus 與 Grafana 雲原生可觀測性監控指南
+├── DOCKER_K8S_GUIDE.md       # Docker、K8s 與 Helm 容器化部署架構
+└── MONITORING_GUIDE.md       # Prometheus 與 Grafana 監控指南
 ```
 
 ---
