@@ -75,6 +75,32 @@ spring-boot-demo/
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
+### 🔄 從代碼提交到外網存取的自動化流程 (End-to-End Workflow)
+```text
+[ 開發人員 Push 程式 ] 
+         │
+         ▼
+ 1. GitHub Actions (ubuntu-latest) 執行 SAST/SCA 安全檢測
+         │
+         ▼
+ 2. GitHub Actions 呼叫 Docker 編譯映像檔並 Push 至 Docker Hub 倉庫
+         │
+         ▼
+ 3. GitHub Actions 自動修改 `values.yaml` 中的 tag 欄位 (寫入最新 Commit SHA)
+         │
+         ▼ (GitOps 自動寫回 GitHub Repo，Commit 標記為 [skip ci])
+ 4. 本地執行 `./local_deploy.sh` 腳本 (一鍵拉取最新 Tag 並利用 Helm 部署)
+         │
+         ▼
+ 5. 本地 K8s 自動拉取 Image，部署 Spring Boot 主程式、Redis 資料庫並啟動 Tunnel 側車容器
+         │
+         ▼ (Tunnel 容器自動連線至 Pinggy 建立隧道)
+ 6. 腳本自動從 Tunnel 日誌中過濾並輸出外網公開存取網址 (URL)
+         │
+         ▼
+[ 外部人員成功存取網頁 ]
+```
+
 ---
 
 ## 📂 專案模組與檔案角色劃分

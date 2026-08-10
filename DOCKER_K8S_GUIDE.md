@@ -1,68 +1,34 @@
-# 🐳 Docker、K8s 與 Helm 雲原生部署架構
+# 🐳 Docker、K8s 與 Helm 容器化部署架構
 
 ---
 
-## 🏗️ 容器化與 Helm 部署設定檔分層
-1. **[Dockerfile](Dockerfile)**：採用多階段構建，包裝為安全且唯讀的 Docker 映像檔。
-2. **`charts/spring-boot-demo/` (Helm Chart)**：
-   * **[Chart.yaml](charts/spring-boot-demo/Chart.yaml)**：定義 Chart 的基本描述與版本資訊。
-   * **[values.yaml](charts/spring-boot-demo/values.yaml)**：全域變數設定檔，預設映像檔倉庫已設定為 `j9686/spring-boot-demo-app`。
-   * **[templates/deployment.yaml](charts/spring-boot-demo/templates/deployment.yaml)**：K8s 部署配置，已整合 **Tunnel 側車容器 (Sidecar)**，並注入連線至 Redis Service 的 `REDIS_HOST` 環境變數。
-   * **[templates/service.yaml](charts/spring-boot-demo/templates/service.yaml)**：K8s Service 配置，定義 `LoadBalancer` 服務以供本地直接連線。
-   * **[templates/redis.yaml](charts/spring-boot-demo/templates/redis.yaml)**：K8s Redis 部署配置，包含獨立的 Redis Deployment 與內部 `ClusterIP` Service，僅限叢集內部連通，防止外網直接存取。
-   * **[templates/servicemonitor.yaml](charts/spring-boot-demo/templates/servicemonitor.yaml)**：定義 Prometheus Operator 跨 Namespace 抓取 Actuator 指標的宣告式規則。
+## 🏗️ Docker 與 Helm 配置
+* **[Dockerfile](Dockerfile)**：多階段建置，產出非 root 唯讀映像檔。
+* **[Chart.yaml](charts/spring-boot-demo/Chart.yaml)**：Helm Chart 描述與版本資訊。
+* **[values.yaml](charts/spring-boot-demo/values.yaml)**：全域部署參數（映像檔倉庫、Tag 與副本數）。
+* **[deployment.yaml](charts/spring-boot-demo/templates/deployment.yaml)**：Spring Boot 主應用與 Tunnel 側車容器（注入 `REDIS_HOST`）。
+* **[service.yaml](charts/spring-boot-demo/templates/service.yaml)**：LoadBalancer 服務，映射 8080 埠。
+* **[redis.yaml](charts/spring-boot-demo/templates/redis.yaml)**：Redis Deployment 與內部 ClusterIP 服務（外網隔離）。
+* **[servicemonitor.yaml](charts/spring-boot-demo/templates/servicemonitor.yaml)**：Prometheus Operator 跨命名空間指標採集規則。
 
 ---
 
 ## 🤝 Docker、K8s 與 Helm 之間的關係與職責
 
-可以使用經典的**「集裝箱貨運物流」**來理解三者的分工與角色：
-
 | 技術 | 實體比喻 | 在本專案中的職責 |
 | :--- | :--- | :--- |
-| **Docker** | **集裝箱（貨櫃）** | 負責**「包裝與隔離」**。將您的 Spring Boot 程式（`.jar`）與運行環境（JRE）封裝成一個標準化、唯讀的安全貨櫃（Docker 映像檔）。不論在何處運行，行為皆完全一致。 |
-| **Kubernetes (K8s)** | **物流港口與貨輪** | 負責**「調度與編排」**。K8s 不製造貨櫃，而是看著說明書決定啟動幾個 Pod（貨櫃實例）、執行健康檢查確保貨櫃沒壞、並建立 Service 網路分流，管理整個港口的貨櫃生命週期。 |
-| **Helm** | **裝箱清單與自動安裝手冊** | 負責**「簡化部署與模板化」**。K8s 需要很多 YAML 檔，手動改寫很麻煩。Helm 把這些設定檔包裝成一個 **Chart** 套件，允許我們將變數（如 `values.yaml` 中的 tag）抽出。您只要在指令中帶入參數，Helm 就會自動生成對應的 YAML 並一鍵套用到 K8s 叢集。 |
+| **Docker** | **集裝箱（貨櫃）** | 負責**「包裝與隔離」**。將 Spring Boot 應用與 JRE 封裝成標準化、不可變的映像檔，確保各環境運行一致。 |
+| **Kubernetes (K8s)** | **物流港口與貨輪** | 負責**「調度與編排」**。管理 Pod 生命週期、執行健康檢查、負載平衡並維持指定副本數。 |
+| **Helm** | **裝箱清單與自動安裝手冊** | 負責**「套件管理與模板化」**。將 K8s YAML 封裝為 Chart，抽離可變參數（如 `values.yaml` 中的 tag），實現參數化一鍵部署。 |
 
 ---
 
-## 🔄 完整閉環：從「代碼提交」到「外部人員連線」的自動化流程
-
-本專案實作了一套兼顧安全與高度自動化的部署及外網存取鏈條，具體流程如下：
-
-```text
-[ 開發人員 Push 程式 ] 
-         │
-         ▼
- 1. GitHub Actions 流水線 (ubuntu-latest) 執行 SAST/SCA 安全檢測
-         │
-         ▼
- 2. GitHub Actions 呼叫 Docker 編譯映像檔並 Push 至 Docker Hub 倉庫
-         │
-         ▼
- 3. GitHub Actions 自動修改 `values.yaml` 中的 tag 欄位 (寫入最新 Commit SHA)
-         │
-         ▼ (GitOps 自動寫回 GitHub Repo，Commit 標記為 [skip ci])
- 4. 本地執行 `./local_deploy.sh` 腳本 (一鍵拉取最新 Tag 並利用 Helm 部署)
-         │
-         ▼
- 5. 本地 K8s 自動拉取 Image，部署 Spring Boot 主程式、Redis 資料庫並啟動 Tunnel 側車容器
-         │
-         ▼ (Tunnel 容器自動連線至 Pinggy 建立隧道)
- 6. 腳本自動從 Tunnel 日誌中過濾並輸出外網公開存取網址 (URL)
-         │
-         ▼
-[ 外部人員成功存取網頁 ]
-```
-
----
-
-## 🌐 側車容器 (Sidecar)、Redis 快取與網路架構詳解
-每個 Pod 內部共享同一個網路空間，其中包含兩個容器，且與內部的 Redis 進行連線：
-*   **`spring-boot-demo`**：運行您的 Java 應用程式（監聽 `8080` 埠），已整合 `StringRedisTemplate`，啟動時會透過環境變數 `REDIS_HOST` 連線至對應的 K8s 內部 Redis 服務。
-*   **`redis` (獨立服務)**：由 `redis.yaml` 啟動，獨立運行於叢集中，透過 `ClusterIP` 提供 `6379` 埠服務，為 Spring Boot 程式提供瀏覽計數快取，不對外網公開以確保資安。
-*   **`tunnel` (Sidecar)**：採用 Alpine Git（內置 SSH），啟動時自動透過 443 埠連線至 `free.pinggy.io` 建立反向 SSH 隧道，將流量直接引導至同一個 Pod 內部的 `127.0.0.1:8080`。
-*   部署腳本最後會自動抓取 Pod 的 Sidecar 日誌，將 Pinggy 配發的隨機 HTTPS 公開網址（例如 `https://xxxx.free.pinggy.link`）直接輸出於您的終端機上，外部人員即可直接透過此 URL 進行存取驗證！
+## 🌐 側車容器 (Sidecar)、Redis 與網路架構
+Pod 內部共享 Localhost 網路空間，包含主程式與側車容器，並連線至叢集內部 Redis：
+* **`spring-boot-demo`**：主應用容器（Port 8080），透過 `REDIS_HOST` 連線至內部 Redis 進行瀏覽計數。
+* **`redis`**：獨立服務（Port 6379），透過 ClusterIP 供內部讀寫，不對外公開以確保安全。
+* **`tunnel` (Sidecar)**：反向 SSH 隧道容器，連線至 Pinggy 並將外網流量轉發至 `127.0.0.1:8080`。
+* **公開網址**：由 `local_deploy.sh` 自動抓取 Tunnel 日誌輸出 HTTPS 存取網址。
 ```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                 ☸️ Kubernetes (Helm) 部署架構與 Sidecar 網路機制詳解           │
