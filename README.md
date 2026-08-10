@@ -1,17 +1,6 @@
-# 🛡️ Spring Boot DevSecOps, GitOps & Observability 示範專案
+# 📂 Spring Boot DevSecOps & Observability 專案架構說明
 
-本專案是一個導入業界標準 **DevSecOps** 縱深安全防禦（SAST、雙軌 SCA、容器安全加固）、**GitOps 自動化部署** 與 **Prometheus + Grafana 雲原生可觀測性** 的 Spring Boot 示範專案。專案已相容 **Java 26**、整合 **Redis 極速快取**，並實作 Kubernetes 自動化外網反向穿透。
-
----
-
-## 📚 專案核心文件導航 (Documentation Hub)
-
-為了方便開發者與維運團隊查閱，專案將深度的技術實作與維運手冊模組化為以下兩份專門指南：
-
-| 指南名稱 | 核心內容與範疇 |
-| :--- | :--- |
-| **[DOCKER_K8S_GUIDE.md](DOCKER_K8S_GUIDE.md)** | **DevSecOps、Docker 與 Kubernetes 容器架構指南**<br>• Dockerfile 多階段安全加固與 Non-root 權限設定。<br>• K8s Pod 內部 Sidecar Pattern 反向穿透與 Localhost 網路機制。<br>• Helm Chart 變數模板與 GitOps 寫回工作流。 |
-| **[MONITORING_GUIDE.md](MONITORING_GUIDE.md)** | **Prometheus & Grafana 雲原生可觀測性與資安隔離指南**<br>• 獨立 `monitoring` 命名空間與 `kube-prometheus-stack` 部署。<br>• `ServiceMonitor` 跨空間指標採集規則。<br>• 30+ 官方預載大盤與 JVM `11378` 儀表板清單。<br>• 遙測數據的網路隔離邊界（Network Isolation Boundary）。 |
+本專案是一個導入 **DevSecOps** 縱深安全防禦（包含 SAST、雙軌 SCA、容器安全加固、GitOps 自動更新）與 **雲原生可觀測性監控體系（Prometheus + Grafana）** 的 Spring Boot 專案。
 
 ---
 
@@ -20,30 +9,35 @@
 ```text
 spring-boot-demo/
 │
-├── .github/workflows/
-│   └── security.yml          # GitHub Actions CI/CD 自動化安全掃描與 GitOps 寫回流水線
+├── .github/
+│   └── workflows/
+│       └── security.yml      # GitHub Actions CI/CD 自動化安全與 GitOps 流水線
 │
 ├── charts/spring-boot-demo/  # Kubernetes Helm Chart 部署套件
 │   ├── Chart.yaml            # Helm Chart 基本定義說明
-│   ├── values.yaml           # 全域部署參數（映像檔倉庫、Tag、Port、副本數等）
+│   ├── values.yaml           # 全域部署參數（映像檔倉庫、Tag、Port、複製數等）
 │   └── templates/
-│       ├── deployment.yaml   # Spring Boot 主程式 Deployment（整合 Pinggy SSH 側車容器）
+│       ├── deployment.yaml   # Spring Boot 主程式 Deployment（整合 Tunnel 側車容器）
 │       ├── service.yaml      # Spring Boot 外部 Service（LoadBalancer 埠口映射）
 │       ├── redis.yaml        # Redis 專屬 Deployment 與內部 Service (ClusterIP 對外隔離)
 │       └── servicemonitor.yaml # Prometheus Operator 跨空間指標採集規則
 │
-├── src/                      # Java 26 原始碼 (整合 Redis 快取與 Actuator 監控)
-│   └── main/java/com/example/demo/
-│       ├── DemoApplication.java    # Spring Boot 主程式啟動進入點
-│       ├── ServletInitializer.java # 外置 Servlet 容器初始化配置
-│       └── rest/
-│           └── FunRestController.java # REST 控制器（整合 Redis 連線並實作造訪累加計數器）
+├── src/                      # Java 26 原始碼與設定
+│   ├── main/
+│   │   ├── java/com/example/demo/
+│   │   │   ├── DemoApplication.java        # Spring Boot 應用程式入口
+│   │   │   ├── ServletInitializer.java     # 外置 Servlet 容器初始化類別
+│   │   │   └── rest/
+│   │   │       └── FunRestController.java  # REST 控制器 (整合 Redis 計數器)
+│   │   └── resources/
+│   │       └── application.properties      # 應用程式配置 (Redis 與 Actuator 端點)
+│   └── test/                 # 測試案例目錄
 │
 ├── Dockerfile                # 容器化定義檔 (Multi-stage Build & Non-root 權限加固)
-├── local_deploy.sh           # 地端一鍵自動拉取、Helm 部署與外網網址輸出腳本 (Unix LF)
-├── pom.xml                   # Maven 專案設定檔 (宣告依賴套件、Actuator 與 Java 26)
+├── local_deploy.sh           # 地端一鍵拉取、自動部署與外網網址輸出腳本 (Unix LF)
+├── pom.xml                   # Maven 專案設定檔 (宣告依賴套件與 Java 26)
 ├── DOCKER_K8S_GUIDE.md       # Docker、Kubernetes 與 Helm 的整合部署運作指南
-└── MONITORING_GUIDE.md       # Prometheus 與 Grafana 雲原生可觀測性主手冊
+└── MONITORING_GUIDE.md       # Prometheus 與 Grafana 雲原生可觀測性監控指南
 ```
 
 ---
@@ -55,7 +49,7 @@ spring-boot-demo/
 │                  🛡️ 全系統架構與 GitOps 自動化部署總覽 (Overview)                 │
 ├──────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
-│   [開發者] ──(1. Git Push)──► [GitHub Actions 雲端 CI/CD]                    │
+│   [開發者] ──(1. Git Push)──► [GitHub Actions 雲端 CI/CD]                 │
 │                                           │                                  │
 │               ┌───────────────────────────┴───────────────────────────┐      │
 │               │ (2. SAST 靜態分析 + 雙軌 SCA 漏洞掃描 + Docker 映像打包)    │      │
@@ -118,26 +112,23 @@ spring-boot-demo/
 
 ---
 
-## 📊 雙軌 SCA 掃描對比表
-
-| 比較維度 | 掃描 `pom.xml` (原始碼宣告檔) | 掃描 `BOOT-INF/lib/*.jar` (編譯產物二進位檔) |
-| :--- | :--- | :--- |
-| **資安定位** | 開發移左防線 (Shift-Left) | 最終交付物檢測 (Deliverable / Binary Audit) |
-| **掃描機制** | **文字解析**：讀取 XML 結構中宣告的 `<groupId>` 與 `<artifactId>`。 | **指紋比對 (Hash Matching)**：計算每一個實體 `.jar` 的 SHA-1 雜湊值，比對全球 CVE 資料庫。 |
-| **防禦價值** | 快速攔截，在 PR 階段第一時間防堵已知不安全元件。 | 防堵間接相依性 (Transient Dependency) 與編譯期遭竄改的依賴包。 |
+### 4. 🌐 核心端點與驗證路由 (Endpoints)
+| 端點路徑 (Path) | HTTP 方法 | 功能說明 | 備註 |
+| :--- | :--- | :--- | :--- |
+| `/` | `GET` | 業務首頁，自動累加 Redis `page_views` 計數並回傳累計次數 | 驗證 Redis 快取連線與業務邏輯 |
+| `/actuator/health` | `GET` | 應用程式健康狀態檢查 (`UP` / `DOWN`) | 供 Kubernetes Liveness/Readiness 探針使用 |
+| `/actuator/prometheus` | `GET` | Prometheus 格式的度量指標數據 | 供 Prometheus Operator 抓取並於 Grafana 呈現 |
+| `/actuator/info` | `GET` | 應用程式基礎資訊 | Actuator 內建端點 |
 
 ---
 
-## 🚀 地端一鍵部署與驗證
-
-本專案將複雜的 K8s 同步與部署完全封裝在 `./local_deploy.sh` 腳本中，讓本地測試如同呼吸般自然：
-
+## 🚀 本地端部署與驗證
 ### 1. 前置準備
-* 確保本地已啟動 **Docker Desktop**，且已打勾開啟 **Kubernetes** 叢集。
-* 在終端機進入專案根目錄，切換 Java 環境：
-  ```bash
-  sdk use java 26.0.2-oracle
-  ```
+*   確保本地已啟動 **Docker Desktop**，且已打勾開啟 **Kubernetes** 叢集。
+*   在終端機進入專案根目錄，切換 Java 環境：
+    ```bash
+    sdk use java 26.0.2-oracle
+    ```
 
 ### 2. 執行一鍵部署
 ```bash
@@ -145,8 +136,32 @@ spring-boot-demo/
 ```
 
 ### 3. 腳本自動運作流程：
-1. 執行 `git pull` 從 GitHub 同步最新被 GitOps 寫回的映像檔標籤（Values.yaml）。
-2. 執行 `helm upgrade --install` 發布/更新本地部署至 K8s 叢集。
-3. 以 `kubectl rollout status` 暫停並同步等待 K8s 滾動更新順利完成。
-4. 自動抓取 Pod 的 Sidecar 日誌，在螢幕上輸出 Pinggy 產生的 **HTTPS 外網公開網址**。
-5. 輸出 Grafana 儀表板存取網址（`http://localhost:3000`），帳號/密碼為 `admin` / `admin`。
+1.  執行 `git pull` 從 GitHub 同步最新被 GitOps 寫回的映像檔標籤（Values.yaml）。
+2.  執行 `helm upgrade --install` 發布/更新本地部署至 K8s 叢集。
+3.  以 `kubectl rollout status` 暫停並同步等待 K8s 滾動更新順利完成。
+4.  自動抓取 Pod 的 Sidecar 日誌，在螢幕上輸出 Pinggy 產生的 **HTTPS 外網公開網址**。
+5.  輸出 Grafana 儀表板存取網址（`http://localhost:3000`），帳號/密碼為 `admin` / `admin`。
+
+---
+
+## 🛡️ 安全性分析 (Security Analysis)
+### 1. SAST (靜態程式碼分析)
+*   **工具**：Semgrep
+*   **掃描目標**：檢查原始碼中的邏輯漏洞、錯誤配置和硬編碼敏感資訊。
+*   **位置**：`.github/workflows/security.yml` -> `semgrep-scan`
+
+### 2. SCA (軟體成分分析) - 雙軌制
+*   **快速掃描 (Fast SCA)**：
+    *   **工具**：Trivy (pom.xml)
+    *   **目的**：快速掃描 `pom.xml` 檔案中的已知 CVE 漏洞。
+    *   **位置**：`.github/workflows/security.yml` -> `trivy-scan-fast`
+*   **深度掃描 (Deep SCA)**：
+    *   **工具**：Trivy (Rootfs mode)
+    *   **目的**：解壓縮 JAR 檔，對 `BOOT-INF/lib/*.jar` 中的依賴套件進行深度漏洞掃描。
+    *   **位置**：`.github/workflows/security.yml` -> `trivy-scan-deep`
+
+### 3. 容器安全加固 (Container Security)
+*   **Dockerfile 最佳實踐**：
+    *   **多階段建置 (Multi-stage Build)**：有效減少最終映像檔大小。
+    *   **非 Root 權限**：以 `appuser` 執行 Java 應用，降低容器內部的攻擊風險。
+    *   **最小化 Base Image**：使用 `eclipse-temurin:26-jre-alpine`，大幅減少潛在漏洞的攻擊面。
