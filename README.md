@@ -14,31 +14,31 @@ spring-boot-demo/
 │
 ├── .github/
 │   └── workflows/
-│       └── security.yml      # GitHub Actions CI/CD 自動化安全與 GitOps 流水線
+│       └── security.yml      # GitHub Actions CI/CD & GitOps
 │
-├── charts/spring-boot-demo/  # Kubernetes Helm Chart 部署套件
-│   ├── Chart.yaml            # Helm Chart 基本定義說明
-│   ├── values.yaml           # 全域部署參數（映像檔倉庫、Tag、Port、複製數等）
+├── charts/spring-boot-demo/
+│   ├── Chart.yaml            # Helm Chart 基本定義
+│   ├── values.yaml           # 全域部署參數（映像檔倉庫、Tag 與副本數）
 │   └── templates/
-│       ├── deployment.yaml   # Spring Boot 應用程式 Deployment（整合 Tunnel 側車容器）
-│       ├── service.yaml      # Spring Boot 外部 Service（LoadBalancer 埠口映射）
-│       ├── redis.yaml        # Redis 專屬 Deployment 與內部 Service (ClusterIP 對外隔離)
-│       └── servicemonitor.yaml # Prometheus Operator 跨空間指標採集規則
+│       ├── deployment.yaml   # Spring Boot 應用程式與 Tunnel 側車容器部署
+│       ├── service.yaml      # 外部存取服務（LoadBalancer 映射 8080）
+│       ├── redis.yaml        # Redis 快取部署與內部服務（ClusterIP 外網隔離）
+│       └── servicemonitor.yaml # Prometheus 跨命名空間指標抓取規則（CRD）
 │
-├── src/                      # Java 26 原始碼與設定
+├── src/
 │   ├── main/
 │   │   ├── java/com/example/demo/
-│   │   │   ├── DemoApplication.java        # Spring Boot 應用程式入口
-│   │   │   ├── ServletInitializer.java     # 外置 Servlet 容器初始化類別
+│   │   │   ├── DemoApplication.java        # Spring Boot 應用程式進入點
+│   │   │   ├── ServletInitializer.java     # 外部 Servlet 容器初始化類別
 │   │   │   └── rest/
-│   │   │       └── FunRestController.java  # REST Controller (整合 Redis 計數器)
+│   │   │       └── FunRestController.java  # 首頁 REST API（整合 Redis 計數器）
 │   │   └── resources/
-│   │       └── application.properties      # 應用程式配置 (Redis 與 Actuator 端點)
-│   └── test/                 # 測試案例目錄
+│   │       └── application.properties      # 應用配置（Redis 連線與 Actuator 監控端點）
+│   └── test/ 
 │
-├── Dockerfile                # 容器化定義檔 (Multi-stage Build & Non-root 權限加固)
-├── local_deploy.sh           # 地端一鍵拉取、自動部署與外網網址輸出腳本 (Unix LF)
-├── pom.xml                   # Maven 專案設定檔 (宣告依賴套件與 Java 26)
+├── Dockerfile                # 容器化定義檔（Multi-stage Build & Non-root 權限加固）
+├── local_deploy.sh           # 腳本（本地一鍵拉取、自動部署與外網網址輸出）
+├── pom.xml                   # Maven 專案設定檔（宣告依賴套件與 Java 26）
 ├── DOCKER_K8S_GUIDE.md       # Docker、K8s 與 Helm 容器化部署架構
 └── MONITORING_GUIDE.md       # Prometheus 與 Grafana 監控指南
 ```
@@ -50,7 +50,7 @@ spring-boot-demo/
 ```text
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │                                                                              │
-│   [開發者] ──(1. Git Push)──► [GitHub Actions CI/CD 流水線]                    │
+│   [開發者] ──(1. Git Push)──► [GitHub Actions CI/CD]                         │
 │                                           │                                  │
 │               ┌───────────────────────────┴───────────────────────────┐      │
 │               │ (2. SAST 靜態分析 + 雙軌 SCA 漏洞掃描 + Docker 映像打包)  │      │
@@ -82,7 +82,7 @@ spring-boot-demo/
 
 ### 1. ⚙️ 核心原始碼
 * **[FunRestController.java](src/main/java/com/example/demo/rest/FunRestController.java)**：首頁 REST API，整合 Redis 快取實作瀏覽計數器。
-* **[DemoApplication.java](src/main/java/com/example/demo/DemoApplication.java)** / **[ServletInitializer.java](src/main/java/com/example/demo/ServletInitializer.java)**：Spring Boot 啟動進入點與外置 Servlet 初始化。
+* **[DemoApplication.java](src/main/java/com/example/demo/DemoApplication.java)** / **[ServletInitializer.java](src/main/java/com/example/demo/ServletInitializer.java)**：Spring Boot 啟動進入點與外部 Servlet 初始化。
 * **[application.properties](src/main/resources/application.properties)**：Redis 連線配置與 `/actuator/prometheus` 監控端點開放。
 
 ### 2. 🛡️ DevSecOps 與 CI/CD
@@ -103,7 +103,7 @@ spring-boot-demo/
 ---
 
 ## 🚀 快速開始
-* 確認本機已啟動 **Docker Desktop**（並啟用 Kubernetes 叢集）。
+* 確認本地已啟動 **Docker Desktop**（並啟用 Kubernetes 叢集）。
 * 於專案根目錄切換 Java 環境並執行部署：
   ```bash
   sdk use java 26.0.2-oracle

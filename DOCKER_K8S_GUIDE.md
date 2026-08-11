@@ -9,7 +9,7 @@
 | **映像建置** | [Dockerfile](Dockerfile) | 多階段建置，產出非 root 唯讀映像檔。 |
 | **Chart 定義** | [Chart.yaml](charts/spring-boot-demo/Chart.yaml) | Helm Chart 描述與版本資訊。 |
 | **全域參數** | [values.yaml](charts/spring-boot-demo/values.yaml) | 全域部署參數（映像檔倉庫、Tag 與副本數）。 |
-| **應用部署** | [deployment.yaml](charts/spring-boot-demo/templates/deployment.yaml) | Spring Boot 應用程式與 Tunnel 側車容器 (Pinggy SSH 反向隧道，注入 `REDIS_HOST`)。 |
+| **應用部署** | [deployment.yaml](charts/spring-boot-demo/templates/deployment.yaml) | Spring Boot 應用程式與 Tunnel 側車容器（Pinggy SSH 反向隧道，注入 `REDIS_HOST`）。 |
 | **負載平衡** | [service.yaml](charts/spring-boot-demo/templates/service.yaml) | LoadBalancer 服務，映射 8080 埠。 |
 | **內部快取** | [redis.yaml](charts/spring-boot-demo/templates/redis.yaml) | Redis Deployment 與內部 ClusterIP 服務（外網隔離）。 |
 | **指標採集** | [servicemonitor.yaml](charts/spring-boot-demo/templates/servicemonitor.yaml) | Prometheus Operator 跨命名空間指標採集規則。 |
