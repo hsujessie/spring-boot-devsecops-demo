@@ -65,12 +65,12 @@
 └────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-| 網路流量 | 傳輸路徑 (起點 ➔ 終點) | 安全防護機制 |
+| 項目 | 傳輸路徑 (起點 ➔ 終點) | 安全防護機制 |
 | :--- | :--- | :--- |
-| **外部存取流量** | 外部用戶 ➔ Spring Boot (`:8080`) | 透過 Pinggy HTTPS 反向隧道安全穿透，隱藏真實主機 IP。 |
-| **Redis 快取流量** | Spring Boot ➔ Redis (`:6379`) | 走 `ClusterIP` 內網專用通訊，外網無法掃描探測。 |
-| **指標採集流量** | Prometheus ➔ Spring Boot (`:8080`) | 透過 `ServiceMonitor` 跨空間內網輪詢，無公開通訊埠。 |
-| **儀表板查詢流量** | Grafana ➔ Prometheus (`TSDB`) | 執行內部 PromQL 查詢，服務僅限本地 `localhost:3000` 存取。 |
+| **外部存取** | 外部用戶 ➔ Spring Boot (`:8080`) | 透過 Pinggy HTTPS 反向隧道安全穿透，隱藏真實主機 IP。 |
+| **Redis 快取** | Spring Boot ➔ Redis (`:6379`) | 走 `ClusterIP` 內網專用通訊，外網無法掃描探測。 |
+| **指標採集** | Prometheus ➔ Spring Boot (`:8080`) | 透過 `ServiceMonitor` 跨空間內網輪詢，無公開通訊埠。 |
+| **儀表板查詢** | Grafana ➔ Prometheus (`TSDB`) | 執行內部 PromQL 查詢，服務僅限本地 `localhost:3000` 存取。 |
 
 ---
 
