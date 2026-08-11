@@ -78,21 +78,7 @@ spring-boot-demo/
 
 ---
 
-## 📦 專案模組與端點
-
-### 1. ⚙️ 核心原始碼
-* **[FunRestController.java](src/main/java/com/example/demo/rest/FunRestController.java)**：首頁 REST API，整合 Redis 快取實作瀏覽計數器。
-* **[DemoApplication.java](src/main/java/com/example/demo/DemoApplication.java)** / **[ServletInitializer.java](src/main/java/com/example/demo/ServletInitializer.java)**：Spring Boot 啟動進入點與外部 Servlet 初始化。
-* **[application.properties](src/main/resources/application.properties)**：Redis 連線配置與 `/actuator/prometheus` 監控端點開放。
-
-### 2. 🛡️ DevSecOps 與 CI/CD
-* **[security.yml](.github/workflows/security.yml)**：整合 **Semgrep SAST**、**Trivy 雙軌 SCA**（原始碼 + JAR 實體二進位深層審計）、**容器映像安全掃描**、Docker Hub 自動發布與 **GitOps 映像 Tag 自動寫回**。
-
-### 3. ☸️ Docker 與 Helm 配置
-* **[Dockerfile](Dockerfile)**：多階段建置、非 root 權限加固（專屬 `appuser` UID `1000`）與最小化 Temurin 26 Alpine 映像檔。
-* **[Helm Templates](charts/spring-boot-demo/templates/)**：宣告 Spring Boot 與 Tunnel 雙容器 Pod、獨立 Redis 快取與 Prometheus ServiceMonitor。
-
-### 4. 🌐 核心端點
+## 🌐 核心端點
 | 端點路徑 | HTTP 方法 | 功能說明 | 備註 |
 | :--- | :--- | :--- | :--- |
 | `/` | `GET` | 首頁，自動累加 Redis 瀏覽計數並回傳次數 | 業務邏輯與快取連線驗證 |
