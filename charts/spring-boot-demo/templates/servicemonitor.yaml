@@ -1,5 +1,5 @@
 # 宣告 Prometheus Operator 的 ServiceMonitor 自訂資源
-# 用於讓 monitoring 空間中的 Prometheus 自動跨 Namespace 發現並抓取 Spring Boot 的 Actuator 指標
+# 用於讓 monitoring 命名空間中的 Prometheus 自動探索並採集 Spring Boot Actuator 指標
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:

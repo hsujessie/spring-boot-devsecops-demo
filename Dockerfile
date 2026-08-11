@@ -1,5 +1,5 @@
-# ─── 階段一：Build 階段 (Multi-stage Build) ───
-# 使用輕量級 Alpine 鏡像進行編譯，減少最終產物體積
+# ─── 階段一：Build 階段 (Multi-stage Build 多階段建置) ───
+# 使用輕量級 Alpine 映像檔進行編譯，減少最終產物體積
 FROM maven:3-eclipse-temurin-26 AS builder
 
 WORKDIR /app
@@ -19,7 +19,7 @@ WORKDIR /app
 # 使用明確的 UID 1000 與 GID 1000，以便在 K8s SecurityContext 中精確控管
 RUN addgroup -g 1000 -S appgroup && adduser -u 1000 -S appuser -G appgroup
 
-# 從 builder 階段只複製產出的 jar 包
+# 從 builder 階段複製編譯產出的 JAR 檔
 COPY --from=builder /app/target/*.jar app.jar
 
 # 將檔案擁有權交給非 root 用戶

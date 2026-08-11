@@ -2,7 +2,7 @@
 
 * ☕ **應用架構**：Java 26 + Spring Boot + Redis 快取計數器。
 * 🛡️ **DevSecOps**：Semgrep SAST 靜態掃描、Trivy 雙軌 SCA 依賴審計與容器加固。
-* 🔄 **GitOps CI/CD**：GitHub Actions 自動構建與 Helm `values.yaml` 自動版本寫回。
+* 🔄 **GitOps CI/CD**：GitHub Actions 自動建置與 Helm `values.yaml` 自動版本寫回。
 * 📊 **可觀測性**：Prometheus 指標採集與 Grafana 視覺化監控。
 
 ---
@@ -17,19 +17,19 @@ spring-boot-demo/
 │       └── security.yml        # GitHub Actions CI/CD & GitOps
 │
 ├── charts/spring-boot-demo/
-│   ├── Chart.yaml              # Helm Chart 基本定義檔
-│   ├── values.yaml             # 全域部署參數檔（映像檔倉庫、Tag 與副本數）
+│   ├── Chart.yaml              # Helm Chart 定義檔
+│   ├── values.yaml             # 全域部署參數檔（映像檔倉庫、標籤 Tag 與副本數）
 │   └── templates/
-│       ├── deployment.yaml     # Spring Boot 應用程式與 Tunnel 側車容器部署
+│       ├── deployment.yaml     # Spring Boot 應用程式與 Tunnel 側車容器 (SSH 反向隧道) 部署
 │       ├── service.yaml        # 外部存取服務（LoadBalancer 映射 8080）
 │       ├── redis.yaml          # Redis 快取部署與內部服務（ClusterIP 外網隔離）
-│       └── servicemonitor.yaml # Prometheus 跨命名空間指標採集規則（CRD）
+│       └── servicemonitor.yaml # CRD 跨命名空間指標採集規則
 │
 ├── src/
 │   ├── main/
 │   │   ├── java/com/example/demo/
 │   │   │   ├── DemoApplication.java        # Spring Boot 應用程式進入點
-│   │   │   ├── ServletInitializer.java     # 外部 Servlet 容器初始化類別
+│   │   │   ├── ServletInitializer.java     # Servlet 容器初始化類別
 │   │   │   └── rest/
 │   │   │       └── FunRestController.java  # 首頁 REST API（整合 Redis 計數器）
 │   │   └── resources/
@@ -37,7 +37,7 @@ spring-boot-demo/
 │   └── test/ 
 │
 ├── Dockerfile                # 容器化定義檔（多階段建置 & 非 root 權限加固）
-├── local_deploy.sh           # 腳本（本地一鍵拉取、自動部署與外網網址輸出）
+├── local_deploy.sh           # 本地一鍵同步、部署與外網網址輸出腳本
 ├── pom.xml                   # Maven 專案設定檔（宣告依賴套件與 Java 26）
 ├── DOCKER_K8S_GUIDE.md       # Docker、K8s 與 Helm 容器化部署架構
 └── MONITORING_GUIDE.md       # Prometheus 與 Grafana 監控指南
@@ -48,32 +48,33 @@ spring-boot-demo/
 ## 🏗️ 系統架構與 GitOps
 
 ```text
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                                                                              │
-│   [開發者] ──(1. Git Push)──► [GitHub Actions CI/CD]                         │
-│                                           │                                  │
-│               ┌───────────────────────────┴───────────────────────────┐      │
-│               │ (2. SAST 靜態分析 + 雙軌 SCA 漏洞掃描 + Docker 映像打包)  │      │
-│               ▼                                                       ▼      │
-│       [Docker Hub 倉庫]                                    [GitOps 自動寫回]  │
-│   (儲存最新 Commit Tag 映像檔)                             (更新 values.yaml)  │
-│               │                                                       │      │
-│               └───────────────────────────┬───────────────────────────┘      │
-│                                           │                                  │
-│                                           ▼ (3. local_deploy.sh / Helm 同步) │
-│   ┌────────────────────── Kubernetes 叢集 (Docker Desktop) ──────────────┐   │
-│   │                                                                      │   │
-│   │  【應用程式命名空間: default】              【監控命名空間: monitoring】   │   │
-│   │   ├── [Spring Boot 應用 (Java 26)]        ├── [Prometheus TSDB 時序庫] │   │
-│   │   ├── [Redis 快取 (計數器 6379)]           └── [Grafana 平台 (Port 3000)]│  │
-│   │   └── [Tunnel 側車 (SSH 反向隧道)]                                     │   │
-│   │                 │                                                    │   │
-│   └─────────────────┼────────────────────────────────────────────────────┘   │
-│                     │ (4. 自動外網安全穿透)                                    │
-│                     ▼                                                        │
-│              [Pinggy 公開網址] ◄─── (瀏覽器存取驗證) ─── [外部用戶]              │
-│                                                                              │
-└──────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                  │
+│   [開發者] ──(1. Git Push)──► [GitHub Actions CI/CD]                             │
+│                                           │                                      │
+│               ┌───────────────────────────┴───────────────────────────┐          │
+│               │ (2. SAST 靜態分析 + 雙軌 SCA 依賴審計 + 容器映像檔建置) │        │
+│               ▼                                                       ▼          │
+│       [Docker Hub 倉庫]                                       [GitOps 自動寫回]  │
+│   (儲存最新 Commit Tag 映像檔)                                (更新 values.yaml) │
+│               │                                                       │          │
+│               └───────────────────────────┬───────────────────────────┘          │
+│                                           │                                      │
+│                                           ▼ (3. local_deploy.sh / Helm 同步)     │
+│   ┌─────────────────────── Kubernetes 叢集 (Docker Desktop) ───────────────┐     │
+│   │                                                                      │       │
+│   │  【應用程式命名空間: default】             【監控命名空間: monitoring】  │   │
+│   │   ├── [Spring Boot] (主程式)              ├── [Prometheus] (TSDB 時序庫)│    │
+│   │   ├── [Redis] (快取資料庫)                 └── [Grafana] (視覺化平台)    │   │
+│   │   ├── [Tunnel] (SSH 反向隧道)                                           │    │
+│   │   └── [ServiceMonitor] (CRD 跨命名空間指標採集規則)                     │    │
+│   │                 │                                                       │    │
+│   └─────────────────┼────────────────────────────────────────────────────────┘   │
+│                     │ (4. SSH 安全反向隧道穿透)                                  │
+│                     ▼                                                            │
+│            [Pinggy 公開 HTTPS 網址] ◄─── (瀏覽器存取驗證) ─── [外部用戶]         │
+│                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -81,9 +82,9 @@ spring-boot-demo/
 ## 🌐 核心端點
 | 端點路徑 | HTTP 方法 | 功能說明 | 備註 |
 | :--- | :--- | :--- | :--- |
-| `/` | `GET` | 首頁，自動累加 Redis 瀏覽計數並回傳次數 | 業務邏輯與快取連線驗證 |
+| `/` | `GET` | 首頁，累加 Redis 造訪計數並回傳結果 | 業務邏輯與快取連線驗證 |
 | `/actuator/health` | `GET` | 應用程式健康狀態檢查 (`UP` / `DOWN`) | K8s Liveness/Readiness 探針 |
-| `/actuator/prometheus` | `GET` | Prometheus 格式度量指標數據 | Prometheus 抓取與 Grafana 呈現 |
+| `/actuator/prometheus` | `GET` | Prometheus 格式度量指標數據 | Prometheus 採集與 Grafana 呈現 |
 | `/actuator/info` | `GET` | 應用程式基礎資訊 | Actuator 內建端點 |
 
 ---
