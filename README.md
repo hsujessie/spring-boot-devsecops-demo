@@ -1,7 +1,10 @@
 # ☕️ Spring Boot DevSecOps & Observability 專案架構說明
 
 ## 📝 簡介 (Introduction)
-本專案是一個導入 **DevSecOps** 縱深安全防禦（包含 SAST、雙軌 SCA、容器安全加固、GitOps 自動更新）與 **雲原生可觀測性監控體系（Prometheus + Grafana）** 的 Spring Boot 專案。
+* ☕ **應用架構**：Java 26 + Spring Boot + Redis 快取計數器。
+* 🛡️ **DevSecOps**：Semgrep SAST 靜態掃描、Trivy 雙軌 SCA 依賴審計與容器加固。
+* 🔄 **GitOps CI/CD**：GitHub Actions 自動構建與 Helm `values.yaml` 自動版本寫回。
+* 📊 **可觀測性**：Prometheus 指標採集與 Grafana 視覺化監控。
 
 ---
 
@@ -78,36 +81,7 @@ spring-boot-demo/
 
 ---
 
-## 🔄 從代碼提交到外網存取的自動化流程 (End-to-End Workflow)
-
-```text
-[ 開發人員 Push 程式 ] 
-         │
-         ▼
- 1. GitHub Actions (ubuntu-latest) 執行 SAST/SCA 安全檢測
-         │
-         ▼
- 2. GitHub Actions 呼叫 Docker 編譯映像檔並 Push 至 Docker Hub 倉庫
-         │
-         ▼
- 3. GitHub Actions 自動修改 `values.yaml` 中的 tag 欄位 (寫入最新 Commit SHA)
-         │
-         ▼ (GitOps 自動寫回 GitHub Repo，Commit 標記為 [skip ci])
- 4. 本地執行 `./local_deploy.sh` 腳本 (一鍵拉取最新 Tag 並利用 Helm 部署)
-         │
-         ▼
- 5. 本地 K8s 自動拉取 Image，部署 Spring Boot 主程式、Redis 資料庫並啟動 Tunnel 側車容器
-         │
-         ▼ (Tunnel 容器自動連線至 Pinggy 建立隧道)
- 6. 腳本自動從 Tunnel 日誌中過濾並輸出外網公開存取網址 (URL)
-         │
-         ▼
-[ 外部人員成功存取網頁 ]
-```
-
----
-
-## 📂 專案模組與端點說明 (Modules & Endpoints)
+## 📦 專案模組與端點說明 (Modules & Endpoints)
 
 ### 1. ⚙️ 核心原始碼與設定
 *   **Java 程式碼管理**
@@ -119,21 +93,23 @@ spring-boot-demo/
 
 ### 2. 🛡️ DevSecOps 與 CI/CD 流水線
 *   **[.github/workflows/security.yml](.github/workflows/security.yml)**：
-    *   **SAST 靜態程式碼分析**：使用 Semgrep 掃描原始碼中的邏輯漏洞與 Hardcoded Secrets。
-    *   **Fast SCA 快速分析**：使用 Trivy 掃描 `pom.xml` 的已知 CVE 漏洞。
-    *   **Deep SCA 二進位審計**：解包編譯後的 JAR 檔，以 `rootfs` 模式深層掃描實體套件 `BOOT-INF/lib/*.jar`。
-    *   **Container 容器映像檔掃描**：以 Trivy 掃描 OS 基礎層漏洞。
-    *   **Docker Hub 推送**：自動發布帶有 Commit SHA 與 `latest` 標籤的映像檔。
-    *   **GitOps 自動寫回**：自動將最新 Commit SHA 更新至 Helm `values.yaml` 並推回儲存庫。
+    *   **SAST 靜態分析 (Semgrep)**：掃描原始碼邏輯漏洞、設定檔缺陷與敏感資訊 (Secrets)。
+    *   **雙軌 SCA 依賴審計 (Trivy)**：
+        *   **快速掃描 (Fast SCA)**：掃描 `pom.xml` 提供套件 CVE 漏洞快速反饋。
+        *   **深度審計 (Deep SCA)**：解開 JAR 檔，以 `rootfs` 模式深層稽核 `BOOT-INF/lib/*.jar` 實體二進位套件。
+    *   **容器映像掃描 (Trivy Image)**：檢查 Container OS 基礎層與執行環境漏洞。
+    *   **Docker Hub 發布**：自動打包並推送 Commit SHA 與 `latest` 映像檔。
+    *   **GitOps 自動寫回**：動態更新 Helm `values.yaml` 映像檔 Tag 並自動推回儲存庫。
 
 ### 3. ☸️ 容器化與 Kubernetes Helm Chart
 *   **[Dockerfile](Dockerfile)**：
-    *   **多階段建置 (Multi-stage Build)**：分開編譯環境與運行環境。
-    *   **最小化運行環境**：採用 JRE Alpine 輕量基底，以非 root 用戶（`appuser`）執行 Java，降低受攻擊面。
+    *   **多階段建置 (Multi-stage Build)**：分離編譯與運行環境，縮減最終映像檔大小。
+    *   **非 Root 權限加固**：以專屬 `appuser` (UID/GID 1000) 執行 Java 應用，降低提權風險。
+    *   **最小化 Base Image**：採用 `eclipse-temurin:26-jre-alpine`，大幅減少潛在漏洞攻擊面。
 *   **[charts/spring-boot-demo/](charts/spring-boot-demo/)**：
     *   [deployment.yaml](charts/spring-boot-demo/templates/deployment.yaml)：宣告 Spring Boot 主應用與 Pinggy SSH 反向隧道側車容器。
     *   [service.yaml](charts/spring-boot-demo/templates/service.yaml)：定義 `LoadBalancer` 服務映射 `8080` 埠。
-    *   [redis.yaml](charts/spring-boot-demo/templates/redis.yaml)：宣告獨立運行的 Redis 資料庫與 `ClusterIP` 內部服務。
+    *   [redis.yaml](charts/spring-boot-demo/templates/redis.yaml)：宣告獨立運行的 Redis 資料庫與 `ClusterIP` 內部服務（外網隔離）。
     *   [servicemonitor.yaml](charts/spring-boot-demo/templates/servicemonitor.yaml)：定義 Prometheus Operator 的 `ServiceMonitor` 跨空間指標抓取規則。
 
 ### 4. 🌐 核心端點與驗證路由 (Endpoints)
@@ -159,33 +135,10 @@ spring-boot-demo/
 ./local_deploy.sh
 ```
 
-### 3. 腳本自動運作流程：
-1.  執行 `git pull` 從 GitHub 同步最新被 GitOps 寫回的映像檔標籤（Values.yaml）。
+### 3. 腳本自動運作流程
+1.  執行 `git pull` 從 GitHub 同步最新被 GitOps 寫回的映像檔標籤（values.yaml）。
 2.  執行 `helm upgrade --install` 發布/更新本地部署至 K8s 叢集。
 3.  以 `kubectl rollout status` 暫停並同步等待 K8s 滾動更新順利完成。
 4.  自動抓取 Pod 的 Sidecar 日誌，在螢幕上輸出 Pinggy 產生的 **HTTPS 外網公開網址**。
 5.  輸出 Grafana 儀表板存取網址（`http://localhost:3000`），帳號/密碼為 `admin` / `admin`。
 
----
-
-## 🛡️ 安全性分析 (Security Analysis)
-### 1. SAST (靜態程式碼分析)
-*   **工具**：Semgrep
-*   **掃描目標**：檢查原始碼中的邏輯漏洞、錯誤配置和硬編碼敏感資訊。
-*   **位置**：`.github/workflows/security.yml` -> `semgrep-scan`
-
-### 2. SCA (軟體成分分析) - 雙軌制
-*   **快速掃描 (Fast SCA)**：
-    *   **工具**：Trivy (pom.xml)
-    *   **目的**：快速掃描 `pom.xml` 檔案中的已知 CVE 漏洞。
-    *   **位置**：`.github/workflows/security.yml` -> `trivy-scan-fast`
-*   **深度掃描 (Deep SCA)**：
-    *   **工具**：Trivy (Rootfs mode)
-    *   **目的**：解壓縮 JAR 檔，對 `BOOT-INF/lib/*.jar` 中的依賴套件進行深度漏洞掃描。
-    *   **位置**：`.github/workflows/security.yml` -> `trivy-scan-deep`
-
-### 3. 容器安全加固 (Container Security)
-*   **Dockerfile 最佳實踐**：
-    *   **多階段建置 (Multi-stage Build)**：有效減少最終映像檔大小。
-    *   **非 Root 權限**：以 `appuser` 執行 Java 應用，降低容器內部的攻擊風險。
-    *   **最小化 Base Image**：使用 `eclipse-temurin:26-jre-alpine`，大幅減少潛在漏洞的攻擊面。
