@@ -2,6 +2,27 @@
 
 ---
 
+## 🛠️ 應用端監控配置
+
+| 配置項目 | 檔案 | 說明 |
+| :--- | :--- | :--- |
+| **Maven 依賴** | [pom.xml](pom.xml) | 引入 `spring-boot-starter-actuator` 與 `micrometer-registry-prometheus`。 |
+| **參數配置** | [application.properties](src/main/resources/application.properties) | 開放 `/actuator/prometheus` 監控端點並標記應用名稱。 |
+| **CRD 宣告** | [servicemonitor.yaml](charts/spring-boot-demo/templates/servicemonitor.yaml) | 定義 Prometheus 每 15 秒跨 Namespace 抓取（Scrape）規則。 |
+
+---
+
+## 🤝 監控元件分工
+
+| 元件 | 角色 | 功能 |
+| :--- | :--- | :--- |
+| **Spring Boot Actuator** | 指標生產者 | 收集應用內部指標（HTTP 請求、回應延遲、Tomcat 連線池、健康度）。 |
+| **Micrometer Prometheus** | 格式轉換器 | 將 Actuator 內部度量轉換為 Prometheus 標準格式（OpenMetrics）。 |
+| **Prometheus Operator** | 收集器與 TSDB | 跨 Namespace 定時抓取 `/actuator/prometheus` 並儲存時序資料。 |
+| **Grafana** | 視覺化平台 | 查詢 Prometheus 數據並渲染即時儀表板與圖表。 |
+
+---
+
 ## 🏗️ 監控架構
 
 ```text
@@ -22,17 +43,6 @@
 │                                                                                  │
 └──────────────────────────────────────────────────────────────────────────────────┘
 ```
-
----
-
-## 🔍 監控元件分工
-
-| 元件 | 角色 | 功能 |
-| :--- | :--- | :--- |
-| **Spring Boot Actuator** | 指標生產者 | 收集應用內部指標（HTTP 請求、回應延遲、Tomcat 連線池、健康度）。 |
-| **Micrometer Prometheus** | 格式轉換器 | 將 Actuator 內部度量轉換為 Prometheus 標準格式（OpenMetrics）。 |
-| **Prometheus Operator** | 收集器與 TSDB | 跨 Namespace 定時抓取 `/actuator/prometheus` 並儲存時序資料。 |
-| **Grafana** | 視覺化平台 | 查詢 Prometheus 數據並渲染即時儀表板與圖表。 |
 
 ---
 
@@ -64,16 +74,6 @@
 
 ---
 
-## 🛠️ 應用端監控整合
-
-| 配置項目 | 檔案 | 說明 |
-| :--- | :--- | :--- |
-| **Maven 依賴** | [pom.xml](pom.xml) | 引入 `spring-boot-starter-actuator` 與 `micrometer-registry-prometheus`。 |
-| **參數配置** | [application.properties](src/main/resources/application.properties) | 開放 `/actuator/prometheus` 監控端點並標記應用名稱。 |
-| **CRD 宣告** | [servicemonitor.yaml](charts/spring-boot-demo/templates/servicemonitor.yaml) | 定義 Prometheus 每 15 秒跨 Namespace 抓取（Scrape）規則。 |
-
----
-
 ## 🏢 監控平台部署 (Helm)
 
 部署於獨立的 `monitoring` 命名空間：
@@ -97,7 +97,7 @@ helm upgrade --install prometheus-stack prometheus-community/kube-prometheus-sta
 
 ## 📂 Grafana 常用儀表板
 
-| 監控項目 | 儀表板 / ID | 指標 |
+| 監控項目 | 儀表板 / ID | 核心指標 |
 | :--- | :--- | :--- |
 | **K8s 叢集與節點** | 內建 `Compute Resources` & `Node Exporter` | 叢集 CPU/記憶體配額、Pod 狀態、主機 I/O 負載。 |
 | **Spring Boot / JVM** | ⭐ 社群 **`11378`** (*JVM Micrometer*) | JVM Heap、GC 暫停、HTTP 請求量 (RPS) 與 Tomcat 連線數。 |
