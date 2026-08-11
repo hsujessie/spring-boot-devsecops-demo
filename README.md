@@ -76,7 +76,10 @@ spring-boot-demo/
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 🔄 從代碼提交到外網存取的自動化流程 (End-to-End Workflow)
+---
+
+## 🔄 從代碼提交到外網存取的自動化流程 (End-to-End Workflow)
+
 ```text
 [ 開發人員 Push 程式 ] 
          │
@@ -104,7 +107,7 @@ spring-boot-demo/
 
 ---
 
-## 📂 專案模組說明 (Project Modules)
+## 📂 專案模組與端點說明 (Modules & Endpoints)
 
 ### 1. ⚙️ 核心原始碼與設定
 *   **Java 程式碼管理**
@@ -143,7 +146,7 @@ spring-boot-demo/
 
 ---
 
-## 🚀 本地端部署與驗證
+## 🚀 本地端部署與驗證 (Local Deployment)
 ### 1. 前置準備
 *   確保本地已啟動 **Docker Desktop**，且已打勾開啟 **Kubernetes** 叢集。
 *   在終端機進入專案根目錄，切換 Java 環境：
