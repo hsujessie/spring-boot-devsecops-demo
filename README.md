@@ -1,6 +1,5 @@
-# ☕️ Spring Boot DevSecOps & Observability 專案架構說明
+# ☕️ Spring Boot DevSecOps & Observability
 
-## 📝 簡介 (Introduction)
 * ☕ **應用架構**：Java 26 + Spring Boot + Redis 快取計數器。
 * 🛡️ **DevSecOps**：Semgrep SAST 靜態掃描、Trivy 雙軌 SCA 依賴審計與容器加固。
 * 🔄 **GitOps CI/CD**：GitHub Actions 自動構建與 Helm `values.yaml` 自動版本寫回。
