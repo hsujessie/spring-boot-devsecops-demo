@@ -8,7 +8,7 @@ image:
   repository: j9686/spring-boot-demo-app
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "0a48b9a78f7cd2adf8a569793b7f26e2d8fb3f33"
+  tag: "a319edb760217ac3e1c536a6350029514eda6fc7"
 
 service:
   type: LoadBalancer
