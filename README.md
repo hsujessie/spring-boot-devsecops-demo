@@ -1,7 +1,7 @@
 # ☕️ Spring Boot DevSecOps & Observability
 
 * ☕ **應用架構**：Java 26 + Spring Boot + Redis 快取計數器。
-* 🛡️ **DevSecOps**：Semgrep SAST 靜態掃描、Trivy 雙軌 SCA 依賴審計與容器加固。
+* 🛡️ **DevSecOps**：Semgrep SAST 靜態掃描、Trivy 雙軌 SCA 依賴套件掃描與容器加固。
 * 🔄 **GitOps CI/CD**：GitHub Actions 自動建置與 Helm `values.yaml` 自動版本寫回。
 * 📊 **可觀測性**：Prometheus 指標採集與 Grafana 視覺化監控。
 
@@ -52,13 +52,13 @@ spring-boot-demo/
 │                                                                                                                 │
 │   [開發者] ──(1. Git Push)──► [GitHub Actions CI/CD]                                                            │
 │                                           │                                                                     │
-│               ┌───────────────────────────┴───────────────────────────┐                                         │
-│               │ (2. SAST 靜態分析 + 雙軌 SCA 依賴審計 + 容器映像檔建置) │                                       │
+│               ┌─────────────────────────────┴─────────────────────────────┐                                     │
+│               │ (2. SAST 靜態分析 + 雙軌 SCA 依賴套件掃描 + 容器映像檔建置) │                                   │
 │               ▼                                                       ▼                                         │
 │       [Docker Hub 倉庫]                                       [GitOps 自動寫回]                                 │
 │   (儲存最新 Commit Tag 映像檔)                                (更新 values.yaml)                                │
 │               │                                                       │                                         │
-│               └───────────────────────────┬───────────────────────────┘                                         │
+│               └─────────────────────────────┬─────────────────────────────┘                                     │
 │                                           │                                                                     │
 │                                           ▼ (3. local_deploy.sh / Helm 同步)                                    │
 │   ┌────────────────────────────────────── Kubernetes 叢集 (Docker Desktop) ───────────────────────────────┐     │
