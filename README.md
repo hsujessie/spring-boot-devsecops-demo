@@ -103,7 +103,7 @@ spring-boot-demo/
 ### 3. ☸️ 容器化與 Kubernetes Helm Chart
 *   **[Dockerfile](Dockerfile)**：
     *   **多階段建置 (Multi-stage Build)**：分離編譯與運行環境，縮減最終映像檔大小。
-    *   **非 Root 權限加固**：以專屬 `appuser` (UID/GID 1000) 執行 Java 應用，降低提權風險。
+    *   **非 Root 權限加固**：以專屬 `appuser` (UID/GID `1000`) 執行 Java 應用，降低提權風險。
     *   **最小化 Base Image**：採用 `eclipse-temurin:26-jre-alpine`，大幅減少潛在漏洞攻擊面。
 *   **[charts/spring-boot-demo/](charts/spring-boot-demo/)**：
     *   [deployment.yaml](charts/spring-boot-demo/templates/deployment.yaml)：宣告 Spring Boot 主應用與 Pinggy SSH 反向隧道側車容器。
@@ -135,7 +135,7 @@ spring-boot-demo/
 ```
 
 ### 3. 腳本自動運作流程
-1.  執行 `git pull` 從 GitHub 同步最新被 GitOps 寫回的映像檔標籤（values.yaml）。
+1.  執行 `git pull` 從 GitHub 同步最新被 GitOps 寫回的映像檔標籤（`values.yaml`）。
 2.  執行 `helm upgrade --install` 發布/更新本地部署至 K8s 叢集。
 3.  以 `kubectl rollout status` 暫停並同步等待 K8s 滾動更新順利完成。
 4.  自動抓取 Pod 的 Sidecar 日誌，在螢幕上輸出 Pinggy 產生的 **HTTPS 外網公開網址**。
