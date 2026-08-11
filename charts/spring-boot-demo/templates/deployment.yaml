@@ -31,7 +31,7 @@ spec:
       
       containers:
         # ==========================================
-        # 1. Spring Boot 應用程式容器
+        # 1. Spring Boot 主程式容器
         # ==========================================
         - name: spring-boot-demo
           # 使用 values.yaml 中設定的倉庫與動態 Tag（由 CI/CD 自動填入）

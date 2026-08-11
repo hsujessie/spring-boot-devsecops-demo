@@ -20,7 +20,7 @@ spring-boot-demo/
 │   ├── Chart.yaml              # Helm Chart 定義檔
 │   ├── values.yaml             # 全域部署參數檔（映像檔倉庫、標籤 Tag 與副本數）
 │   └── templates/
-│       ├── deployment.yaml     # Spring Boot 應用程式與 Tunnel 側車容器 (SSH 反向隧道) 部署
+│       ├── deployment.yaml     # Spring Boot 主程式與 Tunnel 側車容器 (SSH 反向隧道) 部署
 │       ├── service.yaml        # 外部存取服務（LoadBalancer 映射 8080）
 │       ├── redis.yaml          # Redis 快取部署與內部服務（ClusterIP 外網隔離）
 │       └── servicemonitor.yaml # CRD 跨命名空間指標採集規則
@@ -28,7 +28,7 @@ spring-boot-demo/
 ├── src/
 │   ├── main/
 │   │   ├── java/com/example/demo/
-│   │   │   ├── DemoApplication.java        # Spring Boot 應用程式進入點
+│   │   │   ├── DemoApplication.java        # Spring Boot 主程式進入點
 │   │   │   ├── ServletInitializer.java     # Servlet 容器初始化類別
 │   │   │   └── rest/
 │   │   │       └── FunRestController.java  # 首頁 REST API（整合 Redis 計數器）
