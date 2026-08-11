@@ -111,7 +111,7 @@ spring-boot-demo/
     *   [redis.yaml](charts/spring-boot-demo/templates/redis.yaml)：宣告獨立運行的 Redis 資料庫與 `ClusterIP` 內部服務（外網隔離）。
     *   [servicemonitor.yaml](charts/spring-boot-demo/templates/servicemonitor.yaml)：定義 Prometheus Operator 的 `ServiceMonitor` 跨空間指標抓取規則。
 
-### 4. 🌐 核心端點與驗證路由 (Endpoints)
+### 4. 🌐 核心端點與驗證路由 Endpoints
 | 端點路徑 (Path) | HTTP 方法 | 功能說明 | 備註 |
 | :--- | :--- | :--- | :--- |
 | `/` | `GET` | 首頁，自動累加 Redis `page_views` 計數並回傳累計次數 | 驗證 Redis 快取連線與業務邏輯 |
