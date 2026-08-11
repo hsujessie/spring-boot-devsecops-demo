@@ -65,9 +65,9 @@ spring-boot-demo/
 │   │                                                                      │       │
 │   │  【應用程式命名空間: default】             【監控命名空間: monitoring】  │   │
 │   │   ├── [Spring Boot] (主程式)              ├── [Prometheus] (TSDB 時序庫)│    │
-│   │   ├── [Redis] (快取資料庫)                 └── [Grafana] (視覺化平台)    │   │
-│   │   ├── [Tunnel] (SSH 反向隧道)                                           │    │
-│   │   └── [ServiceMonitor] (CRD 跨命名空間指標採集規則)                     │    │
+│   │   ├── [Redis] (快取資料庫)                 ├── [Node Exporter] (主機監控)│   │
+│   │   ├── [Tunnel] (SSH 反向隧道)              ├── [Kube-State-Metrics] (Pod)│   │
+│   │   └── [ServiceMonitor] (CRD 採集規則)      └── [Grafana] (視覺化平台)    │   │
 │   │                 │                                                       │    │
 │   └─────────────────┼────────────────────────────────────────────────────────┘   │
 │                     │ (4. SSH 反向隧道安全穿透)                                  │
