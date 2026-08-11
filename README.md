@@ -110,7 +110,7 @@ spring-boot-demo/
   ./local_deploy.sh
   ```
 
-### `local_deploy.sh` 部署流程
+* `local_deploy.sh` 部署流程：
 
 | 階段 | 指令 / 機制 | 說明 |
 | :--- | :--- | :--- |
