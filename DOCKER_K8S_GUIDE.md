@@ -4,7 +4,7 @@
 
 ## 🛠️ Docker 與 Helm 配置
 
-| 配置項目 | 檔案 | 說明 |
+| 項目 | 檔案 | 說明 |
 | :--- | :--- | :--- |
 | **映像建置** | [Dockerfile](Dockerfile) | 多階段建置，產出非 root 唯讀映像檔。 |
 | **Chart 定義** | [Chart.yaml](charts/spring-boot-demo/Chart.yaml) | Helm Chart 描述與版本資訊。 |

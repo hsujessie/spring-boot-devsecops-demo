@@ -4,7 +4,7 @@
 
 ## 🛠️ 應用端監控配置
 
-| 配置項目 | 檔案 | 說明 |
+| 項目 | 檔案 | 說明 |
 | :--- | :--- | :--- |
 | **Maven 依賴** | [pom.xml](pom.xml) | 引入 `spring-boot-starter-actuator` 與 `micrometer-registry-prometheus`。 |
 | **參數配置** | [application.properties](src/main/resources/application.properties) | 開放 `/actuator/prometheus` 監控端點並標記應用名稱。 |
