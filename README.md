@@ -67,7 +67,7 @@ spring-boot-demo/
 │   │   ├── [Spring Boot] (主程式)                          ├── [Prometheus] (TSDB 時序庫)                    │   │
 │   │   ├── [Redis] (快取資料庫)                            ├── [Node Exporter] (主機 CPU / 記憶體 / 磁碟監控)│   │
 │   │   ├── [Tunnel] (SSH 反向隧道)                         ├── [Kube-State-Metrics] (K8s Pod 狀態與重啟次數) │   │
-│   │   └── [ServiceMonitor] (CRD 跨命名空間指標採集規則)   └── [Grafana] (視覺化平台) ──► localhost:3000     │   │
+│   │   └── [ServiceMonitor] (CRD 跨命名空間指標採集規則)   └── [Grafana] (視覺化平台)                        │   │
 │   │                 │                                                                                 │         │
 │   └─────────────────┼───────────────────────────────────────────────────────────────────────────────────────┘   │
 │                     │ (4. SSH 反向隧道安全穿透)                                                                 │
