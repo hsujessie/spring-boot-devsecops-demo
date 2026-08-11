@@ -2,7 +2,7 @@
 
 ---
 
-## 🏗️ 系統監控架構
+## 🏗️ 監控架構
 
 ```text
 ┌──────────────────────── Kubernetes 叢集 (Docker Desktop) ────────────────────────┐
@@ -74,20 +74,14 @@
 ## 🏢 監控平台部署 (Helm)
 
 部署於獨立的 `monitoring` 命名空間：
-
-### 1. 新增社群 Helm 倉庫
 ```bash
+# 1. 新增社群 Helm 倉庫
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
-```
 
-### 2. 建立 `monitoring` 命名空間
-```bash
+# 2. 建立命名空間並安裝 kube-prometheus-stack
 kubectl create namespace monitoring || true
-```
 
-### 3. 安裝 `kube-prometheus-stack`
-```bash
 helm upgrade --install prometheus-stack prometheus-community/kube-prometheus-stack \
   --namespace monitoring \
   --set grafana.service.type=LoadBalancer \
@@ -100,36 +94,15 @@ helm upgrade --install prometheus-stack prometheus-community/kube-prometheus-sta
 
 ## 📂 Grafana 常用儀表板
 
-`kube-prometheus-stack` 內建常用官方儀表板：
-
-### 1. 叢集與計算資源
-* **`Kubernetes / Compute Resources / Cluster`**：叢集總體 CPU、記憶體與容器配額。
-* **`Kubernetes / Compute Resources / Namespace (Pods)`**：按命名空間分析 Pod 資源消耗。
-* **`Kubernetes / Compute Resources / Workload`**：Deployment 資源限制與分配（Limits / Requests）。
-* **`Kubernetes / Compute Resources / Pod`**：單一 Pod 內各容器資源明細（診斷 OOMKilled / CPU 飆高）。
-
-### 2. 節點與硬體狀態
-* **`Kubernetes / Compute Resources / Node (Pods)`**：本機系統負載 (Load Average 1m/5m/15m)。
-* **`Node Exporter / Nodes`**：磁碟 I/O 讀寫速率、剩餘空間、網路流量與 TCP 連線數。
-
-### 3. 網路與核心服務
-* **`Kubernetes / Networking / Cluster`**：跨 Pod 網路吞吐量與丟包統計。
-* **`CoreDNS`**：內部 DNS 查詢 QPS、延遲與解析錯誤率。
-
-### 4. 應用程式與 JVM 大盤
-* ⭐ **Dashboard ID: `11378`** —— *JVM (Micrometer / Spring Boot)*（推薦）
-  * **JVM Memory**：Heap (Eden / Survivor / Tenured) 與 Metaspace。
-  * **Garbage Collection**：GC 次數與 GC Pause 暫停時間。
-  * **Threads**：Live Threads、Peak Threads、Daemon Threads。
-  * **HTTP Requests**：每秒請求量 (RPS)、HTTP 4xx / 5xx 錯誤率與平均延遲。
-  * **Tomcat**：Active Sessions 與執行緒池連線數。
-* ⭐ **Dashboard ID: `4701`** —— *JVM (Micrometer)* 簡潔版。
+| 監控維度 | 推薦儀表板 / ID | 核心監控指標 |
+| :--- | :--- | :--- |
+| **K8s 叢集與節點** | 內建 `Compute Resources` & `Node Exporter` | 叢集 CPU/記憶體配額、Pod 狀態、主機 I/O 負載。 |
+| **Spring Boot / JVM** | ⭐ 社群 **`11378`** (*JVM Micrometer*) | JVM Heap、GC 暫停、HTTP 請求量 (RPS) 與 Tomcat 連線數。 |
 
 ---
 
-## 📈 常用 PromQL 查詢與流量模擬
+## 📈 常用 PromQL 與流量驗證
 
-### 1. 常用 PromQL
 * **JVM Heap 記憶體使用率**：
   `jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"} * 100`
 * **系統 CPU 使用率**：
@@ -137,8 +110,7 @@ helm upgrade --install prometheus-stack prometheus-community/kube-prometheus-sta
 * **每秒 HTTP 請求量 (RPS)**：
   `rate(http_server_requests_seconds_count[1m])`
 
-### 2. 流量模擬測試
-發送 30 次請求以觀察 Grafana 即時波形：
+**流量模擬測試**（發送 30 次請求以觀察 Grafana 即時波形）：
 ```bash
 for i in {1..30}; do curl -s http://localhost:8080/ > /dev/null; done
 ```
