@@ -114,8 +114,6 @@ spring-boot-demo/
 *   **資源配置檔**
     *   [application.properties](src/main/resources/application.properties)：配置 Redis 連線主機與 Port，並開放 `/actuator/prometheus` 監控端點。
 
----
-
 ### 2. 🛡️ DevSecOps 與 CI/CD 流水線
 *   **[.github/workflows/security.yml](.github/workflows/security.yml)**：
     *   **SAST 靜態程式碼分析**：使用 Semgrep 掃描原始碼中的邏輯漏洞與 Hardcoded Secrets。
@@ -124,8 +122,6 @@ spring-boot-demo/
     *   **Container 容器映像檔掃描**：以 Trivy 掃描 OS 基礎層漏洞。
     *   **Docker Hub 推送**：自動發布帶有 Commit SHA 與 `latest` 標籤的映像檔。
     *   **GitOps 自動寫回**：自動將最新 Commit SHA 更新至 Helm `values.yaml` 並推回儲存庫。
-
----
 
 ### 3. ☸️ 容器化與 Kubernetes Helm Chart
 *   **[Dockerfile](Dockerfile)**：
@@ -136,8 +132,6 @@ spring-boot-demo/
     *   [service.yaml](charts/spring-boot-demo/templates/service.yaml)：定義 `LoadBalancer` 服務映射 `8080` 埠。
     *   [redis.yaml](charts/spring-boot-demo/templates/redis.yaml)：宣告獨立運行的 Redis 資料庫與 `ClusterIP` 內部服務。
     *   [servicemonitor.yaml](charts/spring-boot-demo/templates/servicemonitor.yaml)：定義 Prometheus Operator 的 `ServiceMonitor` 跨空間指標抓取規則。
-
----
 
 ### 4. 🌐 核心端點與驗證路由 (Endpoints)
 | 端點路徑 (Path) | HTTP 方法 | 功能說明 | 備註 |
