@@ -17,13 +17,13 @@ spring-boot-demo/
 │       └── security.yml        # GitHub Actions CI/CD & GitOps
 │
 ├── charts/spring-boot-demo/
-│   ├── Chart.yaml              # Helm Chart 基本定義
-│   ├── values.yaml             # 全域部署參數（映像檔倉庫、Tag 與副本數）
+│   ├── Chart.yaml              # Helm Chart 基本定義檔
+│   ├── values.yaml             # 全域部署參數檔（映像檔倉庫、Tag 與副本數）
 │   └── templates/
 │       ├── deployment.yaml     # Spring Boot 應用程式與 Tunnel 側車容器部署
 │       ├── service.yaml        # 外部存取服務（LoadBalancer 映射 8080）
 │       ├── redis.yaml          # Redis 快取部署與內部服務（ClusterIP 外網隔離）
-│       └── servicemonitor.yaml # Prometheus 跨命名空間指標抓取規則（CRD）
+│       └── servicemonitor.yaml # Prometheus 跨命名空間指標採集規則（CRD）
 │
 ├── src/
 │   ├── main/
@@ -36,7 +36,7 @@ spring-boot-demo/
 │   │       └── application.properties      # 應用配置（Redis 連線與 Actuator 監控端點）
 │   └── test/ 
 │
-├── Dockerfile                # 容器化定義檔（Multi-stage Build & Non-root 權限加固）
+├── Dockerfile                # 容器化定義檔（多階段建置 & 非 root 權限加固）
 ├── local_deploy.sh           # 腳本（本地一鍵拉取、自動部署與外網網址輸出）
 ├── pom.xml                   # Maven 專案設定檔（宣告依賴套件與 Java 26）
 ├── DOCKER_K8S_GUIDE.md       # Docker、K8s 與 Helm 容器化部署架構
