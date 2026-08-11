@@ -104,9 +104,9 @@ spring-boot-demo/
 
 ---
 
-## 📂 專案模組與檔案角色劃分
+## 📂 專案模組說明 (Project Modules)
 
-### 1. ⚙️ 核心原始碼與設定 (`src/` 目錄)
+### 1. ⚙️ 核心原始碼與設定
 *   **Java 程式碼管理**
     *   [DemoApplication.java](src/main/java/com/example/demo/DemoApplication.java)：Spring Boot 應用程式的啟動進入點。
     *   [ServletInitializer.java](src/main/java/com/example/demo/ServletInitializer.java)：外置 Servlet 容器初始化類別。
@@ -116,7 +116,7 @@ spring-boot-demo/
 
 ---
 
-### 2. 🛡️ DevSecOps 與 CI/CD 流水線 (`.github/workflows/`)
+### 2. 🛡️ DevSecOps 與 CI/CD 流水線
 *   **[.github/workflows/security.yml](.github/workflows/security.yml)**：
     *   **SAST 靜態程式碼分析**：使用 Semgrep 掃描原始碼中的邏輯漏洞與 Hardcoded Secrets。
     *   **Fast SCA 快速分析**：使用 Trivy 掃描 `pom.xml` 的已知 CVE 漏洞。
