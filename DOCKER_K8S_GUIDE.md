@@ -17,20 +17,20 @@
 
 | 技術 | 實體比喻 | 專案職責 |
 | :--- | :--- | :--- |
-| **Docker** | **集裝箱（貨櫃）** | **包裝與隔離**。將 Spring Boot 應用與 JRE 封裝為不可變映像檔，確保各環境運行一致。 |
+| **Docker** | **集裝箱（貨櫃）** | **包裝與隔離**。將 Spring Boot 應用程式與 JRE 封裝為不可變映像檔，確保各環境運行一致。 |
 | **Kubernetes (K8s)** | **物流港口與貨輪** | **調度與編排**。管理 Pod 生命週期、健康檢查、負載平衡並維持指定副本數。 |
-| **Helm** | **裝箱清單與自動安裝手冊** | **套件管理與模板化**。將 K8s YAML 封裝為 Chart 並抽離可變參數（如 `values.yaml` 中的 tag），實現參數化一鍵部署。 |
+| **Helm** | **裝箱清單與自動安裝手冊** | **套件管理與模板化**。將 K8s YAML 封裝為 Chart 並抽離可變參數（如 `values.yaml` 中的 `tag`），實現參數化一鍵部署。 |
 
 ---
 
-## 🌐 Sidecar 側車容器、Redis 與網路架構
+## 🌐 容器與網路架構
 Pod 內部共享 Localhost 網路空間（含 Spring Boot 主容器與 Tunnel 側車容器），並連線至內部 Redis：
-* **`spring-boot-demo`**：Spring Boot 應用程式容器（Port 8080），透過 `REDIS_HOST` 連線至內部 Redis 進行瀏覽計數。
+* **`spring-boot-demo`**：Spring Boot 主容器（Port 8080），透過 `REDIS_HOST` 連線至內部 Redis 進行瀏覽計數。
 * **`redis`**：獨立服務（Port 6379），透過 ClusterIP 供內部讀寫，不對外公開以確保安全。
 * **`tunnel`**：Tunnel 側車容器（Pinggy SSH 反向隧道），連線至 Pinggy 將外網流量轉發至 `127.0.0.1:8080`，由 `local_deploy.sh` 自動抓取日誌輸出存取網址。
 ```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                 ☸️ Kubernetes (Helm) 部署架構與 Sidecar 網路機制詳解           │
+│                      ☸️ Kubernetes 容器與網路架構圖                          │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  【Kubernetes 叢集 (Docker Desktop)】                                        │
