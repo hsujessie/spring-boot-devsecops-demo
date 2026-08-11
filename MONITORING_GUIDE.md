@@ -25,9 +25,9 @@
 
 ---
 
-## 🔍 核心元件職責
+## 🔍 監控元件分工
 
-| 元件名稱 | 角色定位 | 專案職責 |
+| 元件 | 角色 | 功能 |
 | :--- | :--- | :--- |
 | **Spring Boot Actuator** | 指標生產者 | 收集應用內部指標（HTTP 請求、回應延遲、Tomcat 連線池、健康度）。 |
 | **Micrometer Prometheus** | 格式轉換器 | 將 Actuator 內部度量轉換為 Prometheus 標準格式（OpenMetrics）。 |
@@ -55,18 +55,18 @@
 └────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-| 流量通訊鏈路 | 連線路徑 (起點 ➔ 終點) | 安全防護機制 |
+| 網路流量 | 傳輸路徑 (起點 ➔ 終點) | 安全防護機制 |
 | :--- | :--- | :--- |
-| **外部用戶存取** | 外部用戶 ➔ Spring Boot (`:8080`) | 透過 Pinggy HTTPS 反向隧道安全穿透，隱藏真實主機 IP。 |
-| **Redis 連線** | Spring Boot ➔ Redis (`:6379`) | 走 `ClusterIP` 內網專用通訊，外網無法掃描探測。 |
-| **監控指標採集** | Prometheus ➔ Spring Boot (`:8080`) | 透過 `ServiceMonitor` 跨空間內網輪詢，無公開通訊埠。 |
-| **儀表板即時查詢** | Grafana ➔ Prometheus (`TSDB`) | 執行內部 PromQL 查詢，服務僅限本地 `localhost:3000` 存取。 |
+| **外部存取流量** | 外部用戶 ➔ Spring Boot (`:8080`) | 透過 Pinggy HTTPS 反向隧道安全穿透，隱藏真實主機 IP。 |
+| **Redis 快取流量** | Spring Boot ➔ Redis (`:6379`) | 走 `ClusterIP` 內網專用通訊，外網無法掃描探測。 |
+| **指標採集流量** | Prometheus ➔ Spring Boot (`:8080`) | 透過 `ServiceMonitor` 跨空間內網輪詢，無公開通訊埠。 |
+| **儀表板查詢流量** | Grafana ➔ Prometheus (`TSDB`) | 執行內部 PromQL 查詢，服務僅限本地 `localhost:3000` 存取。 |
 
 ---
 
 ## 🛠️ 應用端監控整合
 
-| 配置維度 | 目標檔案 | 專案職責 |
+| 配置項目 | 檔案 | 說明 |
 | :--- | :--- | :--- |
 | **Maven 依賴** | [pom.xml](pom.xml) | 引入 `spring-boot-starter-actuator` 與 `micrometer-registry-prometheus`。 |
 | **參數配置** | [application.properties](src/main/resources/application.properties) | 開放 `/actuator/prometheus` 監控端點並標記應用名稱。 |
@@ -97,7 +97,7 @@ helm upgrade --install prometheus-stack prometheus-community/kube-prometheus-sta
 
 ## 📂 Grafana 常用儀表板
 
-| 監控維度 | 推薦儀表板 / ID | 核心監控指標 |
+| 監控項目 | 儀表板 / ID | 指標 |
 | :--- | :--- | :--- |
 | **K8s 叢集與節點** | 內建 `Compute Resources` & `Node Exporter` | 叢集 CPU/記憶體配額、Pod 狀態、主機 I/O 負載。 |
 | **Spring Boot / JVM** | ⭐ 社群 **`11378`** (*JVM Micrometer*) | JVM Heap、GC 暫停、HTTP 請求量 (RPS) 與 Tomcat 連線數。 |
