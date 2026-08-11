@@ -65,9 +65,11 @@
 
 ## 🛠️ 應用端監控整合
 
-* **Maven 依賴**：在 [pom.xml](pom.xml) 引入 `spring-boot-starter-actuator` 與 `micrometer-registry-prometheus`。
-* **參數配置**：在 [application.properties](src/main/resources/application.properties) 開放 `/actuator/prometheus` 端點並標記應用名稱。
-* **CRD 宣告**：在 [servicemonitor.yaml](charts/spring-boot-demo/templates/servicemonitor.yaml) 定義 Prometheus 每 15 秒跨 Namespace 抓取規則。
+| 配置維度 | 目標檔案 | 專案職責 |
+| :--- | :--- | :--- |
+| **Maven 依賴** | [pom.xml](pom.xml) | 引入 `spring-boot-starter-actuator` 與 `micrometer-registry-prometheus`。 |
+| **參數配置** | [application.properties](src/main/resources/application.properties) | 開放 `/actuator/prometheus` 監控端點並標記應用名稱。 |
+| **CRD 宣告** | [servicemonitor.yaml](charts/spring-boot-demo/templates/servicemonitor.yaml) | 定義 Prometheus 每 15 秒跨 Namespace 抓取（Scrape）規則。 |
 
 ---
 
@@ -103,12 +105,11 @@ helm upgrade --install prometheus-stack prometheus-community/kube-prometheus-sta
 
 ## 📈 常用 PromQL 與流量驗證
 
-* **JVM Heap 記憶體使用率**：
-  `jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"} * 100`
-* **系統 CPU 使用率**：
-  `system_cpu_usage * 100`
-* **每秒 HTTP 請求量 (RPS)**：
-  `rate(http_server_requests_seconds_count[1m])`
+| 監控指標 | PromQL 查詢語法 | 說明 |
+| :--- | :--- | :--- |
+| **JVM Heap 記憶體** | `jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"} * 100` | 計算堆積記憶體使用百分比 (%)。 |
+| **系統 CPU 使用率** | `system_cpu_usage * 100` | 監控主機/容器整體 CPU 負載 (%)。 |
+| **每秒請求量 (RPS)** | `rate(http_server_requests_seconds_count[1m])` | 統計最近 1 分鐘 HTTP 吞吐率。 |
 
 **流量模擬測試**（發送 30 次請求以觀察 Grafana 即時波形）：
 ```bash
