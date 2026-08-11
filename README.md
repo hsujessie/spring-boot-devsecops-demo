@@ -14,15 +14,15 @@ spring-boot-demo/
 │
 ├── .github/
 │   └── workflows/
-│       └── security.yml      # GitHub Actions CI/CD & GitOps
+│       └── security.yml        # GitHub Actions CI/CD & GitOps
 │
 ├── charts/spring-boot-demo/
-│   ├── Chart.yaml            # Helm Chart 基本定義
-│   ├── values.yaml           # 全域部署參數（映像檔倉庫、Tag 與副本數）
+│   ├── Chart.yaml              # Helm Chart 基本定義
+│   ├── values.yaml             # 全域部署參數（映像檔倉庫、Tag 與副本數）
 │   └── templates/
-│       ├── deployment.yaml   # Spring Boot 應用程式與 Tunnel 側車容器部署
-│       ├── service.yaml      # 外部存取服務（LoadBalancer 映射 8080）
-│       ├── redis.yaml        # Redis 快取部署與內部服務（ClusterIP 外網隔離）
+│       ├── deployment.yaml     # Spring Boot 應用程式與 Tunnel 側車容器部署
+│       ├── service.yaml        # 外部存取服務（LoadBalancer 映射 8080）
+│       ├── redis.yaml          # Redis 快取部署與內部服務（ClusterIP 外網隔離）
 │       └── servicemonitor.yaml # Prometheus 跨命名空間指標抓取規則（CRD）
 │
 ├── src/
