@@ -2,7 +2,7 @@
 
 ---
 
-## 🏗️ 系統監控架構圖
+## 🏗️ 系統監控架構
 
 ```text
 ┌──────────────────────── Kubernetes 叢集 (Docker Desktop) ────────────────────────┐
@@ -27,7 +27,7 @@
 
 ## 🔍 核心元件職責
 
-| 元件名稱 | 角色定位 | 具體職責 |
+| 元件名稱 | 角色定位 | 專案職責 |
 | :--- | :--- | :--- |
 | **Spring Boot Actuator** | 指標生產者 | 收集應用內部指標（HTTP 請求、回應延遲、Tomcat 連線池、健康度）。 |
 | **Micrometer Prometheus** | 格式轉換器 | 將 Actuator 內部度量轉換為 Prometheus 標準格式（OpenMetrics）。 |
@@ -36,9 +36,44 @@
 
 ---
 
-## 🏢 獨立 Monitoring 命名空間部署
+## 🛡️ 網路隔離與資安邊界
 
-將監控系統部署於獨立的 `monitoring` 命名空間：
+```text
+┌──────────────────────── 外部網際網路 (Public Internet) ────────────────────────┐
+│                                                                                │
+│   外部用戶 ──(僅限存取)──► [Pinggy HTTPS 隧道] ──► [Spring Boot (8080 首頁)]     │
+│                                                                                │
+├──────────────────────── 內部隔離區 (K8s Private Network) ──────────────────────┤
+│                                                                                │
+│   [Spring Boot] ───(ClusterIP:6379 內網)───► [Redis 快取資料庫] (外網隔離)     │
+│         │                                                                      │
+│         └───(ServiceMonitor 內網輪詢)──────► [Prometheus TSDB] (外網隔離)      │
+│                                                     │                          │
+│                                                     ▼ (內部 PromQL 查詢)       │
+│                                                [Grafana 平台] (僅限本地 3000)   │
+│                                                                                │
+└────────────────────────────────────────────────────────────────────────────────┘
+```
+
+* **外網公開 (Public)**：僅 Spring Boot 首頁透過 Pinggy 安全隧道提供訪客存取。
+* **內網隔離 (Internal Only)**：
+  * **Redis 快取**：以 `ClusterIP` 封閉在內部網段，外網無法掃描探測。
+  * **Prometheus 指標採集**：透過 `ServiceMonitor` 走內部網路輪詢，不開放任何外網通訊埠。
+  * **Grafana 儀表板**：僅綁定本地（`localhost:3000`），防止內部拓撲與負載資訊外洩。
+
+---
+
+## 🛠️ 應用端監控整合
+
+* **Maven 依賴**：在 [pom.xml](pom.xml) 引入 `spring-boot-starter-actuator` 與 `micrometer-registry-prometheus`。
+* **參數配置**：在 [application.properties](src/main/resources/application.properties) 開放 `/actuator/prometheus` 端點並標記應用名稱。
+* **CRD 宣告**：在 [servicemonitor.yaml](charts/spring-boot-demo/templates/servicemonitor.yaml) 定義 Prometheus 每 15 秒跨 Namespace 抓取規則。
+
+---
+
+## 🏢 監控平台部署 (Helm)
+
+部署於獨立的 `monitoring` 命名空間：
 
 ### 1. 新增社群 Helm 倉庫
 ```bash
@@ -63,50 +98,7 @@ helm upgrade --install prometheus-stack prometheus-community/kube-prometheus-sta
 
 ---
 
-## 🛠️ 應用端配置與 ServiceMonitor 宣告
-
-### 1. Maven 依賴 (`pom.xml`)
-```xml
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-actuator</artifactId>
-</dependency>
-<dependency>
-    <groupId>io.micrometer</groupId>
-    <artifactId>micrometer-registry-prometheus</artifactId>
-</dependency>
-```
-
-### 2. 配置參數 (`application.properties`)
-```properties
-# 開放監控端點
-management.endpoints.web.exposure.include=health,info,prometheus
-management.endpoint.prometheus.enabled=true
-management.metrics.tags.application=spring-boot-demo
-```
-
-### 3. ServiceMonitor 定義 (`templates/servicemonitor.yaml`)
-```yaml
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  name: {{ .Release.Name }}-servicemonitor
-  labels:
-    app: {{ .Release.Name }}
-    release: prometheus-stack
-spec:
-  selector:
-    matchLabels:
-      app: {{ .Release.Name }}
-  endpoints:
-    - port: http
-      path: /actuator/prometheus
-      interval: 15s
-```
-
----
-
-## 📂 Grafana 常用儀表板清單
+## 📂 Grafana 常用儀表板
 
 `kube-prometheus-stack` 內建常用官方儀表板：
 
@@ -135,33 +127,6 @@ spec:
 
 ---
 
-## 🛡️ 網路隔離與資安邊界
-
-```text
-┌──────────────────────── 外部網際網路 (Public Internet) ────────────────────────┐
-│                                                                                │
-│   外部用戶 ──(僅限存取)──► [Pinggy HTTPS 隧道] ──► [Spring Boot (8080 首頁)]     │
-│                                                                                │
-├──────────────────────── 內部隔離區 (K8s Private Network) ──────────────────────┤
-│                                                                                │
-│   [Spring Boot] ───(ClusterIP:6379 內網)───► [Redis 快取資料庫] (外網隔離)     │
-│         │                                                                      │
-│         └───(ServiceMonitor 內網輪詢)──────► [Prometheus TSDB] (外網隔離)      │
-│                                                     │                          │
-│                                                     ▼ (內部 PromQL 查詢)       │
-│                                                [Grafana 平台] (僅限本地 3000)   │
-│                                                                                │
-└────────────────────────────────────────────────────────────────────────────────┘
-```
-
-1. **外網公開 (Public)**：僅 Spring Boot 首頁透過 Pinggy 安全隧道提供訪客存取。
-2. **內網隔離 (Internal Only)**：
-   * **Redis 快取**：以 `ClusterIP` 封閉在內部網段，外網無法掃描探測。
-   * **Prometheus 指標採集**：透過 `ServiceMonitor` 走內部網路輪詢，不開放任何外網通訊埠。
-   * **Grafana 儀表板**：僅綁定本地（`localhost:3000`），防止內部拓撲與系統負載機密外洩。
-
----
-
 ## 📈 常用 PromQL 查詢與流量模擬
 
 ### 1. 常用 PromQL
@@ -173,7 +138,7 @@ spec:
   `rate(http_server_requests_seconds_count[1m])`
 
 ### 2. 流量模擬測試
-在終端機執行快速請求以觀察即時波形變化：
+發送 30 次請求以觀察 Grafana 即時波形：
 ```bash
 for i in {1..30}; do curl -s http://localhost:8080/ > /dev/null; done
 ```
