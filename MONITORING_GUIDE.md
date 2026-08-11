@@ -55,12 +55,12 @@
 └────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-| 邊界層級 | 目標元件 | 資安防護機制 |
+| 流量通訊鏈路 | 連線路徑 (起點 ➔ 終點) | 安全防護機制 |
 | :--- | :--- | :--- |
-| **外網公開 (Public)** | Spring Boot 應用首頁 | 僅透過 Pinggy 安全反向隧道開放訪客存取。 |
-| **內網隔離 (Internal Only)** | Redis 快取資料庫 | 以 `ClusterIP` 封閉在內部網段，外網無法直接探測。 |
-| **內網隔離 (Internal Only)** | Prometheus 指標採集 | 透過 `ServiceMonitor` 走內部輪詢，不開放對外通訊埠。 |
-| **內網隔離 (Internal Only)** | Grafana 視覺化平台 | 僅綁定本地（`localhost:3000`），防止內部拓撲與負載外洩。 |
+| **外部用戶存取** | 外部用戶 ➔ Spring Boot (`:8080`) | 透過 Pinggy HTTPS 反向隧道安全穿透，隱藏真實主機 IP。 |
+| **Redis 連線** | Spring Boot ➔ Redis (`:6379`) | 走 `ClusterIP` 內網專用通訊，外網無法掃描探測。 |
+| **監控指標採集** | Prometheus ➔ Spring Boot (`:8080`) | 透過 `ServiceMonitor` 跨空間內網輪詢，無公開通訊埠。 |
+| **儀表板即時查詢** | Grafana ➔ Prometheus (`TSDB`) | 執行內部 PromQL 查詢，服務僅限本地 `localhost:3000` 存取。 |
 
 ---
 
