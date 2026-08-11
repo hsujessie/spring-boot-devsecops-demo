@@ -55,11 +55,12 @@
 └────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-* **外網公開 (Public)**：僅 Spring Boot 首頁透過 Pinggy 安全隧道提供訪客存取。
-* **內網隔離 (Internal Only)**：
-  * **Redis 快取**：以 `ClusterIP` 封閉在內部網段，外網無法掃描探測。
-  * **Prometheus 指標採集**：透過 `ServiceMonitor` 走內部網路輪詢，不開放任何外網通訊埠。
-  * **Grafana 儀表板**：僅綁定本地（`localhost:3000`），防止內部拓撲與負載資訊外洩。
+| 邊界層級 | 目標元件 | 資安防護機制 |
+| :--- | :--- | :--- |
+| **外網公開 (Public)** | Spring Boot 應用首頁 | 僅透過 Pinggy 安全反向隧道開放訪客存取。 |
+| **內網隔離 (Internal Only)** | Redis 快取資料庫 | 以 `ClusterIP` 封閉在內部網段，外網無法直接探測。 |
+| **內網隔離 (Internal Only)** | Prometheus 指標採集 | 透過 `ServiceMonitor` 走內部輪詢，不開放對外通訊埠。 |
+| **內網隔離 (Internal Only)** | Grafana 視覺化平台 | 僅綁定本地（`localhost:3000`），防止內部拓撲與負載外洩。 |
 
 ---
 
