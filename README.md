@@ -20,7 +20,7 @@ spring-boot-demo/
 │   ├── Chart.yaml            # Helm Chart 基本定義說明
 │   ├── values.yaml           # 全域部署參數（映像檔倉庫、Tag、Port、複製數等）
 │   └── templates/
-│       ├── deployment.yaml   # Spring Boot 主程式 Deployment（整合 Tunnel 側車容器）
+│       ├── deployment.yaml   # Spring Boot 應用程式 Deployment（整合 Tunnel 側車容器）
 │       ├── service.yaml      # Spring Boot 外部 Service（LoadBalancer 埠口映射）
 │       ├── redis.yaml        # Redis 專屬 Deployment 與內部 Service (ClusterIP 對外隔離)
 │       └── servicemonitor.yaml # Prometheus Operator 跨空間指標採集規則
@@ -106,7 +106,7 @@ spring-boot-demo/
     *   **非 Root 權限加固**：以專屬 `appuser` (UID/GID `1000`) 執行 Java 應用，降低提權風險。
     *   **最小化 Base Image**：採用 `eclipse-temurin:26-jre-alpine`，大幅減少潛在漏洞攻擊面。
 *   **[charts/spring-boot-demo/](charts/spring-boot-demo/)**：
-    *   [deployment.yaml](charts/spring-boot-demo/templates/deployment.yaml)：宣告 Spring Boot 應用程式與 Pinggy SSH 反向隧道側車容器。
+    *   [deployment.yaml](charts/spring-boot-demo/templates/deployment.yaml)：宣告 Spring Boot 應用程式與 Tunnel 側車容器 (Pinggy SSH 反向隧道)。
     *   [service.yaml](charts/spring-boot-demo/templates/service.yaml)：定義 `LoadBalancer` 服務映射 `8080` 埠。
     *   [redis.yaml](charts/spring-boot-demo/templates/redis.yaml)：宣告獨立運行的 Redis 資料庫與 `ClusterIP` 內部服務（外網隔離）。
     *   [servicemonitor.yaml](charts/spring-boot-demo/templates/servicemonitor.yaml)：定義 Prometheus Operator 的 `ServiceMonitor` 跨空間指標抓取規則。

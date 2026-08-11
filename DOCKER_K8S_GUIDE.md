@@ -6,16 +6,16 @@
 * **[Dockerfile](Dockerfile)**：多階段建置，產出非 root 唯讀映像檔。
 * **[Chart.yaml](charts/spring-boot-demo/Chart.yaml)**：Helm Chart 描述與版本資訊。
 * **[values.yaml](charts/spring-boot-demo/values.yaml)**：全域部署參數（映像檔倉庫、Tag 與副本數）。
-* **[deployment.yaml](charts/spring-boot-demo/templates/deployment.yaml)**：Spring Boot 應用程式與 Tunnel 側車容器（注入 `REDIS_HOST`）。
+* **[deployment.yaml](charts/spring-boot-demo/templates/deployment.yaml)**：Spring Boot 應用程式與 Tunnel 側車容器 (Pinggy SSH 反向隧道，注入 `REDIS_HOST`)。
 * **[service.yaml](charts/spring-boot-demo/templates/service.yaml)**：LoadBalancer 服務，映射 8080 埠。
 * **[redis.yaml](charts/spring-boot-demo/templates/redis.yaml)**：Redis Deployment 與內部 ClusterIP 服務（外網隔離）。
 * **[servicemonitor.yaml](charts/spring-boot-demo/templates/servicemonitor.yaml)**：Prometheus Operator 跨命名空間指標採集規則。
 
 ---
 
-## 🤝 Docker、K8s 與 Helm 核心職責
+## 🤝 Docker、K8s 與 Helm 核心分工
 
-| 技術 | 實體比喻 | 在本專案中的職責 |
+| 技術 | 實體比喻 | 專案職責 |
 | :--- | :--- | :--- |
 | **Docker** | **集裝箱（貨櫃）** | **包裝與隔離**。將 Spring Boot 應用與 JRE 封裝為不可變映像檔，確保各環境運行一致。 |
 | **Kubernetes (K8s)** | **物流港口與貨輪** | **調度與編排**。管理 Pod 生命週期、健康檢查、負載平衡並維持指定副本數。 |
@@ -23,11 +23,11 @@
 
 ---
 
-## 🌐 側車容器 (Sidecar)、Redis 與網路架構
-Pod 內部共享 Localhost 網路空間（含 Spring Boot 與 Tunnel 雙容器），並連線至內部 Redis：
+## 🌐 Sidecar 側車容器、Redis 與網路架構
+Pod 內部共享 Localhost 網路空間（含 Spring Boot 主容器與 Tunnel 側車容器），並連線至內部 Redis：
 * **`spring-boot-demo`**：Spring Boot 應用程式容器（Port 8080），透過 `REDIS_HOST` 連線至內部 Redis 進行瀏覽計數。
 * **`redis`**：獨立服務（Port 6379），透過 ClusterIP 供內部讀寫，不對外公開以確保安全。
-* **`tunnel` (Sidecar)**：反向 SSH 隧道容器，連線至 Pinggy 將外網流量轉發至 `127.0.0.1:8080`，由 `local_deploy.sh` 自動抓取日誌輸出存取網址。
+* **`tunnel`**：Tunnel 側車容器（Pinggy SSH 反向隧道），連線至 Pinggy 將外網流量轉發至 `127.0.0.1:8080`，由 `local_deploy.sh` 自動抓取日誌輸出存取網址。
 ```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                 ☸️ Kubernetes (Helm) 部署架構與 Sidecar 網路機制詳解           │
