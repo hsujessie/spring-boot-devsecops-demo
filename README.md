@@ -113,7 +113,7 @@ spring-boot-demo/
 <table>
   <thead>
     <tr>
-      <th colspan="3" align="center"><code>local_deploy.sh</code> 腳本部署流程</th>
+      <th colspan="3" align="center"><code>local_deploy.sh</code> 部署流程</th>
     </tr>
     <tr>
       <th align="left">階段</th>
