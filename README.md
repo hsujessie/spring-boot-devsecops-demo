@@ -112,8 +112,8 @@ spring-boot-demo/
 
 | `local_deploy.sh` 執行階段 | 指令 / 機制 | 說明 |
 | :--- | :--- | :--- |
-| **1. 同步映像標籤** | `git pull` | 拉取 GitOps 自動寫回的最新 `values.yaml`。 |
-| **2. 發布 Helm Chart** | `helm upgrade --install` | 發布或更新本地 K8s 叢集部署。 |
-| **3. 等待滾動就緒** | `kubectl rollout status` | 同步等待所有 Pod 健康檢查通過。 |
-| **4. 輸出外網網址** | 讀取 Sidecar 日誌 | 取得 Pinggy 產生的 HTTPS 外網公開存取網址。 |
-| **5. 提示監控平台** | 輸出 Grafana 連線 | 提供儀表板網址 (`localhost:3000`) 與帳密 (`admin`/`admin`)。 |
+| 1. **同步映像標籤** | `git pull` | 拉取 GitOps 自動寫回的最新 `values.yaml`。 |
+| 2. **發布 Helm Chart** | `helm upgrade --install` | 發布或更新本地 K8s 叢集部署。 |
+| 3. **等待滾動就緒** | `kubectl rollout status` | 同步等待所有 Pod 健康檢查通過。 |
+| 4. **輸出外網網址** | 讀取 Sidecar 日誌 | 取得 Pinggy 產生的 HTTPS 外網公開存取網址。 |
+| 5. **提示監控平台** | 輸出 Grafana 連線 | 提供儀表板網址 (`localhost:3000`) 與帳密 (`admin`/`admin`)。 |
