@@ -110,7 +110,7 @@ spring-boot-demo/
   ./local_deploy.sh
   ```
 
-| `local_deploy.sh`<br>執行階段 | 指令 / 機制 | 說明 |
+| 執行階段<br>(<code>local_deploy.sh</code>) | 指令 / 機制 | 說明 |
 | :--- | :--- | :--- |
 | 1. **同步映像標籤** | `git pull` | 拉取 GitOps 自動寫回的最新 `values.yaml`。 |
 | 2. **發布 Helm Chart** | `helm upgrade --install` | 發布或更新本地 K8s 叢集部署。 |
