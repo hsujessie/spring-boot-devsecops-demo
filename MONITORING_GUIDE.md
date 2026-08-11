@@ -52,16 +52,16 @@
 ```text
 ┌──────────────────────── 外部網際網路 (Public Internet) ──────────────────────────┐
 │                                                                                  │
-│   外部用戶 ──(僅限存取)──► [Pinggy 公開 HTTPS 網址] ──► [Spring Boot] (主程式)   │
+│   外部用戶 ──(僅限存取)──► [Pinggy 公開 HTTPS 網址] ──► [Spring Boot 主程式]     │
 │                                                                                  │
 ├──────────────────────── 內部隔離區 (K8s Private Network) ────────────────────────┤
 │                                                                                  │
-│   [Spring Boot] (主程式) ───(ClusterIP:6379 內網)───► [Redis] (快取資料庫)       │
-│         │                                             (外網隔離)                 │
+│   [Spring Boot 主程式] ──(ClusterIP:6379 內網)──► [Redis 快取資料庫] (外網隔離)  │
+│         │                                                                        │
 │         └───(ServiceMonitor 內網採集)──────► [Prometheus] (外網隔離)             │
 │                                                     │                            │
 │                                                     ▼ (內部 PromQL 查詢)         │
-│                                                [Grafana] (視覺化平台)            │
+│                                                [Grafana 視覺化平台]              │
 │                                                                                  │
 └──────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -96,7 +96,7 @@ helm upgrade --install prometheus-stack prometheus-community/kube-prometheus-sta
 | 監控項目 | 儀表板 / ID | 核心指標 |
 | :--- | :--- | :--- |
 | **K8s 叢集與節點** | 內建 `Compute Resources` & `Node Exporter` | 叢集 CPU/記憶體配額、Pod 狀態、主機 I/O 負載。 |
-| **Spring Boot / JVM** | ⭐ 社群 **`11378`** (*JVM Micrometer*) | JVM Heap、GC 暫停、HTTP 請求量 (RPS) 與 Tomcat 連線數。 |
+| **Spring Boot / JVM** | Dashboard ID **`11378`** (*JVM Micrometer*) | JVM Heap、GC 暫停、HTTP 請求量 (RPS) 與 Tomcat 連線數。 |
 
 ---
 

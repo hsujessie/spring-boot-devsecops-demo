@@ -70,7 +70,7 @@ spring-boot-demo/
 │   │   └── [ServiceMonitor] (CRD 跨命名空間指標採集規則)                     │    │
 │   │                 │                                                       │    │
 │   └─────────────────┼────────────────────────────────────────────────────────┘   │
-│                     │ (4. SSH 安全反向隧道穿透)                                  │
+│                     │ (4. SSH 反向隧道安全穿透)                                  │
 │                     ▼                                                            │
 │            [Pinggy 公開 HTTPS 網址] ◄─── (瀏覽器存取驗證) ─── [外部用戶]         │
 │                                                                                  │
@@ -102,5 +102,5 @@ spring-boot-demo/
 | 1. **同步映像標籤** | `git pull` | 拉取 GitOps 自動寫回的最新 `values.yaml`。 |
 | 2. **發布 Helm Chart** | `helm upgrade --install` | 發布或更新本地 K8s 叢集部署。 |
 | 3. **等待滾動就緒** | `kubectl rollout status` | 同步等待所有 Pod 健康檢查通過。 |
-| 4. **輸出外網網址** | 讀取 側車容器 Sidecar 日誌 | 取得 Pinggy 產生的公開 HTTPS 網址。 |
+| 4. **輸出外網網址** | 讀取側車容器 Sidecar 日誌 | 取得 Pinggy 產生的公開 HTTPS 網址。 |
 | 5. **提示監控平台** | 輸出 Grafana 網址 | 提供監控視覺化平台網址 (`localhost:3000`) 與帳密 (`admin`/`admin`)。 |
