@@ -7,7 +7,7 @@
 
 ---
 
-## 📂 專案目錄結構 (Project Structure)
+## 📂 專案目錄結構
 
 ```text
 spring-boot-demo/
@@ -45,12 +45,10 @@ spring-boot-demo/
 
 ---
 
-## 🏗️ 全系統運行架構與 GitOps 總覽 (System & GitOps Architecture)
+## 🏗️ 系統架構與 GitOps
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│                  🛡️ 全系統架構與 GitOps 自動化部署總覽 (Overview)                 │
-├──────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
 │   [開發者] ──(1. Git Push)──► [GitHub Actions CI/CD 流水線]                    │
 │                                           │                                  │
@@ -80,64 +78,45 @@ spring-boot-demo/
 
 ---
 
-## 📦 專案模組與端點說明 (Modules & Endpoints)
+## 📦 專案模組與端點
 
-### 1. ⚙️ 核心原始碼與設定
-*   **Java 程式碼管理**
-    *   [DemoApplication.java](src/main/java/com/example/demo/DemoApplication.java)：Spring Boot 應用程式的啟動進入點。
-    *   [ServletInitializer.java](src/main/java/com/example/demo/ServletInitializer.java)：外置 Servlet 容器初始化類別。
-    *   [FunRestController.java](src/main/java/com/example/demo/rest/FunRestController.java)：Web REST API 控制器，整合 Redis 快取並實作造訪累加計數器。
-*   **資源配置檔**
-    *   [application.properties](src/main/resources/application.properties)：配置 Redis 連線主機與 Port，並開放 `/actuator/prometheus` 監控端點。
+### 1. ⚙️ 核心原始碼
+* **[FunRestController.java](src/main/java/com/example/demo/rest/FunRestController.java)**：首頁 REST API，整合 Redis 快取實作瀏覽計數器。
+* **[DemoApplication.java](src/main/java/com/example/demo/DemoApplication.java)** / **[ServletInitializer.java](src/main/java/com/example/demo/ServletInitializer.java)**：Spring Boot 啟動進入點與外置 Servlet 初始化。
+* **[application.properties](src/main/resources/application.properties)**：Redis 連線配置與 `/actuator/prometheus` 監控端點開放。
 
-### 2. 🛡️ DevSecOps 與 CI/CD 流水線
-*   **[.github/workflows/security.yml](.github/workflows/security.yml)**：
-    *   **SAST 靜態分析 (Semgrep)**：掃描原始碼邏輯漏洞、設定檔缺陷與敏感資訊 (Secrets)。
-    *   **雙軌 SCA 依賴審計 (Trivy)**：
-        *   **快速掃描 (Fast SCA)**：掃描 `pom.xml` 提供套件 CVE 漏洞快速反饋。
-        *   **深度審計 (Deep SCA)**：解開 JAR 檔，以 `rootfs` 模式深層稽核 `BOOT-INF/lib/*.jar` 實體二進位套件。
-    *   **容器映像掃描 (Trivy Image)**：檢查 Container OS 基礎層與執行環境漏洞。
-    *   **Docker Hub 發布**：自動打包並推送 Commit SHA 與 `latest` 映像檔。
-    *   **GitOps 自動寫回**：動態更新 Helm `values.yaml` 映像檔 Tag 並自動推回儲存庫。
+### 2. 🛡️ DevSecOps 與 CI/CD
+* **[security.yml](.github/workflows/security.yml)**：整合 **Semgrep SAST**、**Trivy 雙軌 SCA**（原始碼 + JAR 實體二進位深層審計）、**容器映像安全掃描**、Docker Hub 自動發布與 **GitOps 映像 Tag 自動寫回**。
 
-### 3. ☸️ 容器化與 Kubernetes Helm Chart
-*   **[Dockerfile](Dockerfile)**：
-    *   **多階段建置 (Multi-stage Build)**：分離編譯與運行環境，縮減最終映像檔大小。
-    *   **非 Root 權限加固**：以專屬 `appuser` (UID/GID `1000`) 執行 Java 應用，降低提權風險。
-    *   **最小化 Base Image**：採用 `eclipse-temurin:26-jre-alpine`，大幅減少潛在漏洞攻擊面。
-*   **[charts/spring-boot-demo/](charts/spring-boot-demo/)**：
-    *   [deployment.yaml](charts/spring-boot-demo/templates/deployment.yaml)：宣告 Spring Boot 應用程式與 Tunnel 側車容器 (Pinggy SSH 反向隧道)。
-    *   [service.yaml](charts/spring-boot-demo/templates/service.yaml)：定義 `LoadBalancer` 服務映射 `8080` 埠。
-    *   [redis.yaml](charts/spring-boot-demo/templates/redis.yaml)：宣告獨立運行的 Redis 資料庫與 `ClusterIP` 內部服務（外網隔離）。
-    *   [servicemonitor.yaml](charts/spring-boot-demo/templates/servicemonitor.yaml)：定義 Prometheus Operator 的 `ServiceMonitor` 跨空間指標抓取規則。
+### 3. ☸️ Docker 與 Helm 配置
+* **[Dockerfile](Dockerfile)**：多階段建置、非 root 權限加固（專屬 `appuser` UID `1000`）與最小化 Temurin 26 Alpine 映像檔。
+* **[Helm Templates](charts/spring-boot-demo/templates/)**：宣告 Spring Boot 與 Tunnel 雙容器 Pod、獨立 Redis 快取與 Prometheus ServiceMonitor。
 
-### 4. 🌐 核心端點與驗證路由 Endpoints
-| 端點路徑 (Path) | HTTP 方法 | 功能說明 | 備註 |
+### 4. 🌐 核心端點
+| 端點路徑 | HTTP 方法 | 功能說明 | 備註 |
 | :--- | :--- | :--- | :--- |
-| `/` | `GET` | 首頁，自動累加 Redis `page_views` 計數並回傳累計次數 | 驗證 Redis 快取連線與業務邏輯 |
-| `/actuator/health` | `GET` | 應用程式健康狀態檢查 (`UP` / `DOWN`) | 供 Kubernetes Liveness/Readiness 探針使用 |
-| `/actuator/prometheus` | `GET` | Prometheus 格式的度量指標數據 | 供 Prometheus Operator 抓取並於 Grafana 呈現 |
+| `/` | `GET` | 首頁，自動累加 Redis 瀏覽計數並回傳次數 | 業務邏輯與快取連線驗證 |
+| `/actuator/health` | `GET` | 應用程式健康狀態檢查 (`UP` / `DOWN`) | K8s Liveness/Readiness 探針 |
+| `/actuator/prometheus` | `GET` | Prometheus 格式度量指標數據 | Prometheus 抓取與 Grafana 呈現 |
 | `/actuator/info` | `GET` | 應用程式基礎資訊 | Actuator 內建端點 |
 
 ---
 
-## 🚀 本地端部署與驗證 (Local Deployment)
-### 1. 前置準備
-*   確保本地已啟動 **Docker Desktop**，且已打勾開啟 **Kubernetes** 叢集。
-*   在終端機進入專案根目錄，切換 Java 環境：
-    ```bash
-    sdk use java 26.0.2-oracle
-    ```
+## 🚀 快速開始
+* 確認本機已啟動 **Docker Desktop**（並啟用 Kubernetes 叢集）。
+* 於專案根目錄切換 Java 環境並執行部署：
+  ```bash
+  sdk use java 26.0.2-oracle
+  ./local_deploy.sh
+  ```
 
-### 2. 執行一鍵部署
-```bash
-./local_deploy.sh
-```
+### 腳本執行流程
 
-### 3. 腳本自動運作流程
-1.  執行 `git pull` 從 GitHub 同步最新被 GitOps 寫回的映像檔標籤（`values.yaml`）。
-2.  執行 `helm upgrade --install` 發布/更新本地部署至 K8s 叢集。
-3.  以 `kubectl rollout status` 暫停並同步等待 K8s 滾動更新順利完成。
-4.  自動抓取 Pod 的 Sidecar 日誌，在螢幕上輸出 Pinggy 產生的 **HTTPS 外網公開網址**。
-5.  輸出 Grafana 儀表板存取網址（`http://localhost:3000`），帳號/密碼為 `admin` / `admin`。
+| 階段 | 指令 / 機制 | 說明 |
+| :--- | :--- | :--- |
+| **1. 同步映像標籤** | `git pull` | 拉取 GitOps 自動寫回的最新 `values.yaml`。 |
+| **2. 發布 Helm Chart** | `helm upgrade --install` | 發布或更新本地 K8s 叢集部署。 |
+| **3. 等待滾動就緒** | `kubectl rollout status` | 同步等待所有 Pod 健康檢查通過。 |
+| **4. 輸出外網網址** | 讀取 Sidecar 日誌 | 取得 Pinggy 產生的 HTTPS 外網公開存取網址。 |
+| **5. 提示監控平台** | 輸出 Grafana 連線 | 提供儀表板網址 (`localhost:3000`) 與帳密 (`admin`/`admin`)。 |
 
