@@ -91,13 +91,33 @@ spring-boot-demo/
 ---
 
 ## 🚀 快速開始
+
+### 1. 前置準備
 * 確認本地已啟動 **Docker Desktop**（並啟用 Kubernetes 叢集）。
-  > 💡 **初次使用提示**：若是全新搭建環境，請先參考 [MONITORING_GUIDE.md](MONITORING_GUIDE.md#--監控平台部署-helm) 執行監控平台初始化指令（僅需執行一次）。
-* 於專案根目錄切換 Java 環境並執行部署：
-  ```bash
-  sdk use java 26.0.2-oracle
-  ./local_deploy.sh
-  ```
+
+### 2. 初始化監控平台（僅需於首次部署時執行一次）
+若您的 K8s 叢集尚未安裝監控基礎設施，請依序執行以下指令建立 Prometheus 與 Grafana（細節可參閱 [MONITORING_GUIDE.md](MONITORING_GUIDE.md)）：
+```bash
+# 新增並更新 Helm 監控倉庫
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+
+# 建立命名空間並安裝監控平台（自動啟用 ServiceMonitor 跨命名空間採集）
+kubectl create namespace monitoring || true
+helm upgrade --install prometheus-stack prometheus-community/kube-prometheus-stack \
+  --namespace monitoring \
+  --set grafana.service.type=LoadBalancer \
+  --set grafana.service.port=3000 \
+  --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false \
+  --set grafana.adminPassword=admin
+```
+
+### 3. 部署與運行應用程式
+於專案根目錄切換 Java 環境並執行一鍵部署腳本：
+```bash
+sdk use java 26.0.2-oracle
+./local_deploy.sh
+```
 
 | 執行階段<br>(<code>local_deploy.sh</code>) | 指令 / 機制 | 說明 |
 | :--- | :--- | :--- |
