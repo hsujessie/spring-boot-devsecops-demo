@@ -6,6 +6,8 @@ metadata:
   # 使用 Helm Release 名稱並加上「-service」後綴來命名此 Service 資源。
   # 這樣做能確保 Service 的名稱能與對應的 Deployment 完美關聯，同時防止在同一個 K8s 命名空間內發生資源命名衝突。
   name: {{ .Release.Name }}-service
+  # 定義此 Service 本身的身分識別標籤（Labels）
+  # 💡 用意：供 servicemonitor.yaml (Prometheus Operator) 透過 matchLabels 探索並自動採集 /actuator/prometheus 指標
   labels:
     app: {{ .Release.Name }}
     release: prometheus-stack
