@@ -92,6 +92,7 @@ spring-boot-demo/
 
 ## 🚀 快速開始
 * 確認本地已啟動 **Docker Desktop**（並啟用 Kubernetes 叢集）。
+  > 💡 **初次使用提示**：若是全新搭建環境，請先參考 [MONITORING_GUIDE.md](MONITORING_GUIDE.md#--監控平台部署-helm) 執行監控平台初始化指令（僅需執行一次）。
 * 於專案根目錄切換 Java 環境並執行部署：
   ```bash
   sdk use java 26.0.2-oracle
