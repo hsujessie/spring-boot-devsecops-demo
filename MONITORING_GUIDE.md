@@ -83,7 +83,6 @@
 
 * 🎯 **核心作用**：在獨立的 `monitoring` 命名空間建立常駐的 Prometheus 與 Grafana 平台，並啟用自定義資源控制器 (CRD)，使 K8s 能正確解析 [servicemonitor.yaml](charts/spring-boot-demo/templates/servicemonitor.yaml) 執行跨命名空間指標採集。
 
-### 關鍵參數說明
 | 參數設定 | 說明 |
 | :--- | :--- |
 | `--namespace monitoring` | 將監控組件與業務應用程式（`default`）實體隔離。 |
