@@ -77,17 +77,34 @@
 
 ## 🏢 監控平台部署 (Helm)
 
-部署於獨立的 `monitoring` 命名空間：
+* 💡 **執行時機**：**環境一次性前置初始化**。僅在全新搭建環境或重置 K8s 叢集時執行 1 次（日常程式碼發布只需執行 `./local_deploy.sh`）。
+* 🎯 **核心作用**：在獨立的 `monitoring` 命名空間建立常駐的 Prometheus 與 Grafana 平台，並啟用自定義資源控制器 (CRD)，使 K8s 能正確解析 [servicemonitor.yaml](charts/spring-boot-demo/templates/servicemonitor.yaml) 執行跨命名空間指標採集。
+
+### 1. 部署指令
 ```bash
-# 1. 新增社群 Helm 倉庫
+# 1. 新增社群 Helm 倉庫並更新快取
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
 
-# 2. 建立命名空間並安裝 kube-prometheus-stack
+# 2. 建立專用命名空間 (具冪等性，已存在亦不報錯)
 kubectl create namespace monitoring || true
 
-helm upgrade --install prometheus-stack prometheus-community/kube-prometheus-stack   --namespace monitoring   --set grafana.service.type=LoadBalancer   --set grafana.service.port=3000   --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false   --set grafana.adminPassword=admin
+# 3. 安裝/升級 kube-prometheus-stack 套件
+helm upgrade --install prometheus-stack prometheus-community/kube-prometheus-stack \
+  --namespace monitoring \
+  --set grafana.service.type=LoadBalancer \
+  --set grafana.service.port=3000 \
+  --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false \
+  --set grafana.adminPassword=admin
 ```
+
+### 2. 關鍵參數說明
+| 參數設定 | 作用與設計考量 |
+| :--- | :--- |
+| `--namespace monitoring` | 將監控組件與業務應用程式（`default`）實體隔離。 |
+| `--set grafana.service.type=LoadBalancer`<br>`--set grafana.service.port=3000` | 自動綁定本地 `3000` 埠，瀏覽器可直接透過 `http://localhost:3000` 存取。 |
+| `--set prometheus...serviceMonitorSelectorNilUsesHelmValues=false` | **關鍵設定**。允許 Prometheus 自動跨命名空間採集 `default` 下的 Spring Boot Actuator 指標。 |
+| `--set grafana.adminPassword=admin` | 指定 Grafana 管理員密碼為 `admin`，方便本地開發與展示快速登入。 |
 
 ---
 
