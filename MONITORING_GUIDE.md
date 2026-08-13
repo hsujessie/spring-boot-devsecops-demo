@@ -79,7 +79,7 @@
 
 ## 🏢 監控平台部署 (Helm)
 
-> 💡 **快速安裝指引**：具體 Helm 部署指令已整合於 [README.md 的快速開始](README.md#init-monitoring)。
+> 💡 **快速安裝**：具體 Helm 部署指令請參閱 [README.md 快速開始 - 2. 初始化監控平台](README.md#init-monitoring)。
 
 * 🎯 **核心作用**：在獨立的 `monitoring` 命名空間建立常駐的 Prometheus 與 Grafana 平台，並啟用自定義資源控制器 (CRD)，使 K8s 能正確解析 [servicemonitor.yaml](charts/spring-boot-demo/templates/servicemonitor.yaml) 執行跨命名空間指標採集。
 
