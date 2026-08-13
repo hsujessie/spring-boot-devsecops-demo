@@ -9,13 +9,13 @@ metadata:
   # 定義此 Service 本身的身分識別標籤（Labels）
   # 💡 用意：供 servicemonitor.yaml (Prometheus Operator) 透過 matchLabels 探索並自動採集 /actuator/prometheus 指標
   labels:
-    app: {{ .Release.Name }}
-    release: prometheus-stack
+    app: {{ .Release.Name }}  # ✅ 給 Service 本身貼上標籤，讓 ServiceMonitor (servicemonitor.yaml) 可以找到它。
+    release: prometheus-stack # ✅ 讓 Prometheus 監控套件辨識
 spec:
   # 定義此 Service 應該把流量導向哪些 Pod
   selector:
     # 這裡的標籤必須與 deployment.yaml 中的 Pod Label 相同 👉(spec.template.metadata.labels.app)
-    app: {{ .Release.Name }}
+    app: {{ .Release.Name }} # ⚠️ 注意：這是 Service 用來「找 Pod」的規則，不是 Service「自己身上的標籤」
   ports:
     - name: http
       protocol: TCP # 傳輸協定類型，預設為 TCP
