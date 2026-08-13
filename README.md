@@ -95,15 +95,18 @@ spring-boot-demo/
 ### 1. 前置準備
 * 確認本地已啟動 **Docker Desktop**（並啟用 Kubernetes 叢集）。
 
-### 2. 初始化監控平台（僅需於首次部署時執行一次）
-若您的 K8s 叢集尚未安裝監控基礎設施，請依序執行以下指令建立 Prometheus 與 Grafana（細節可參閱 [MONITORING_GUIDE.md](MONITORING_GUIDE.md)）：
+### 2. 初始化監控平台
+僅在全新搭建環境或重置 K8s 叢集時執行 1 次（日常程式碼發布只需執行 `./local_deploy.sh`）。
+（詳細說明可參閱 [MONITORING_GUIDE.md - 監控平台部署](MONITORING_GUIDE.md#--監控平台部署-helm)）：
 ```bash
 # 新增並更新 Helm 監控倉庫
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
 
-# 建立命名空間並安裝監控平台（自動啟用 ServiceMonitor 跨命名空間採集）
+# 建立命名空間 (若不存在)
 kubectl create namespace monitoring || true
+
+# 安裝/升級 kube-prometheus-stack 套件（自動啟用 ServiceMonitor 跨命名空間採集）
 helm upgrade --install prometheus-stack prometheus-community/kube-prometheus-stack \
   --namespace monitoring \
   --set grafana.service.type=LoadBalancer \
