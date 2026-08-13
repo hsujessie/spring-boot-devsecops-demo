@@ -97,7 +97,7 @@ spring-boot-demo/
 
 <div id="init-monitoring"></div>
 
-### 2. 初始化監控平台
+### 2. 監控平台初始化
 * 僅在全新搭建環境或重置 K8s 叢集時，**執行 1 次**。（日常程式碼發布只需執行 `./local_deploy.sh`）<br>詳細說明可參閱 [MONITORING_GUIDE.md - 監控平台部署](MONITORING_GUIDE.md#helm-deploy)
 ```bash
 # 新增並更新 Helm 監控倉庫
